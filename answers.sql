@@ -223,7 +223,7 @@ DELETE FROM trades WHERE trade_id = (SELECT MAX(trade_id) FROM trades);
 -- 6.4
 INSERT INTO trades (trade_date, account_id, instrument_id, side, quantity, price, commission)
 VALUES ('2024-03-05', 1, 1, 'HOLD', 15, 275.40, 4.13);
--- Ожидаемая ошибка: "CHECK constraint failed: trades"
+-- Ожидаемая ошибка: "CHECK constraint failed: side IN ('BUY', 'SELL')"
 -- Правило: side TEXT NOT NULL CHECK (side IN ('BUY', 'SELL')) допускает только
 -- два конкретных значения; 'HOLD' в их число не входит.
 
@@ -256,7 +256,7 @@ DELETE FROM trades WHERE trade_date = '2024-03-06';
 BEGIN;
 INSERT INTO trades (trade_date, account_id, instrument_id, side, quantity, price, commission)
 VALUES ('2024-03-07', 1, 1, 'BUY', -1, 270.00, 1.08);
--- Ожидаемая ошибка: "CHECK constraint failed: trades"
+-- Ожидаемая ошибка: "CHECK constraint failed: quantity > 0"
 -- Важный вывод: сама неудачная команда откатывается автоматически (эта конкретная
 -- строка не добавляется), НО транзакция, открытая через BEGIN, остаётся ОТКРЫТОЙ.
 -- Убедиться в этом можно так: попробуйте сразу после ошибки выполнить ещё раз BEGIN;

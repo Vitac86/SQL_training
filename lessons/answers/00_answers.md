@@ -67,7 +67,7 @@ INSERT INTO accounts_demo (account_name, risk_limit_rub) VALUES ('ACC-DEMO-3', -
 Ожидаемая ошибка:
 
 ```text
-Runtime error: CHECK constraint failed: accounts_demo
+Runtime error: CHECK constraint failed: risk_limit_rub > 0
 ```
 
 Защищает `CHECK (risk_limit_rub > 0)`. Отрицательный лимит риска не имеет экономического
