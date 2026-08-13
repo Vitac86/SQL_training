@@ -1,0 +1,7 @@
+account_id,account_name,strategy,risk_limit_rub
+1,ACC-EQUITY-CORE,value_equity,5000000
+2,ACC-INTRADAY,intraday_speculative,1500000
+3,ACC-LONGTERM,buy_and_hold,10000000
+4,ACC-ARBITRAGE,fx_arbitrage,3000000
+5,ACC-FIXEDINCOME,fixed_income,4000000
+6,ACC-DORMANT,none,500000

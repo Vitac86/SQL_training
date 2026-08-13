@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Учебные/временные базы данных.
+# trading_training.db НЕ исключается - это готовая учебная база, она остаётся в репозитории.
+lesson_00.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Временный файл для практики импорта Excel (создаётся студентом самостоятельно, см. 04_import_excel.py)
+data/new_trades_to_import.xlsx
+data/*.tmp.xlsx
+
+# IDE / OS мусор
+.idea/
+Thumbs.db
+.DS_Store

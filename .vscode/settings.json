@@ -1,0 +1,10 @@
+{
+    "sqltools.connections": [
+        {
+            "name": "Trading Training DB",
+            "driver": "SQLite",
+            "database": "${workspaceFolder}/trading_training.db"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}
