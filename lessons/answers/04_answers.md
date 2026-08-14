@@ -90,3 +90,27 @@ FROM trades AS t
 JOIN instruments AS i ON i.instrument_id = t.instrument_id
 WHERE i.asset_class = 'fx';
 ```
+
+### 7. Цена сделки против цены закрытия того же дня (SBER)
+
+```sql
+SELECT
+    t.trade_id,
+    t.trade_date,
+    t.price AS trade_price,
+    p.close_price
+FROM trades AS t
+JOIN instruments AS i ON i.instrument_id = t.instrument_id
+JOIN daily_prices AS p
+    ON p.instrument_id = t.instrument_id
+   AND p.price_date    = t.trade_date
+WHERE i.ticker = 'SBER'
+ORDER BY t.trade_date;
+```
+
+Возвращает ровно по одной строке на каждую сделку по `SBER` (21 сделка) — `JOIN` по двум
+колонкам сразу (`instrument_id` и дате) не даёт fan-out, в отличие от соединения только по
+`instrument_id` (см. раздел урока про `JOIN` по нескольким колонкам). `trade_price` и
+`close_price` для одной и той же даты обычно немного отличаются — сделка совершается по цене
+конкретной сделки, а `close_price` — это цена закрытия торгового дня в целом, это разные вещи,
+даже если дата совпадает.

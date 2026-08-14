@@ -70,3 +70,20 @@ WHERE side = 'BUY'
 ORDER BY commission ASC
 LIMIT 10;
 ```
+
+### 8. quantity * price без округления и с ROUND
+
+```sql
+SELECT
+    trade_id,
+    quantity * price AS turnover_raw,
+    ROUND(quantity * price, 2) AS turnover_rounded
+FROM trades
+WHERE trade_id = 4;
+```
+
+Реальный результат: `turnover_raw = 3602.0000000000005`, `turnover_rounded = 3602.0`. Оба
+числа математически означают одно и то же (`50 * 72.04 = 3602`), но `price` хранится как
+`REAL` (число с плавающей точкой), а такие числа не всегда можно точно представить в двоичном
+виде — отсюда лишние незначащие разряды в "сыром" значении. `ROUND(..., 2)` убирает этот шум
+и оставляет только значимые для рубля два знака после запятой.

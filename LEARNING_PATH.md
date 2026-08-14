@@ -13,8 +13,10 @@
   `DROP TABLE`, транзакции (`BEGIN`/`ROLLBACK`/`COMMIT`), нормализация на пальцах, составные
   ключи, базовое представление об индексах.
 
-- **1. Устройство готовой БД** — `lessons/01_что_такое_база_данных.md`. Переход к
-  `trading_training.db`, повторение терминов на реальных данных, первый `SELECT`.
+- **1. Устройство готовой БД** — `lessons/01_что_такое_база_данных.md`. Переход от
+  `sqlite3.exe` к рабочей среде VS Code + SQLTools + `practice.sql`; исследование готовой
+  схемы `trading_training.db` через SQL (`sqlite_schema`, `PRAGMA table_info`,
+  `PRAGMA foreign_key_list`) и первый `SELECT`.
 
 - **2. SELECT и фильтрация** — `lessons/02_select_where_order_by.md`. `SELECT`, `DISTINCT`,
   `AS`, `WHERE` и операторы сравнения, `AND`/`OR`/`NOT`, `IN`, `BETWEEN`, `LIKE`,

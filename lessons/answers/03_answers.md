@@ -77,7 +77,7 @@ GROUP BY account_id, instrument_id
 ORDER BY account_id, instrument_id;
 ```
 
-### 7. Инструменты с менее чем 5 сделками
+### 7. Инструменты с менее чем 15 сделками
 
 ```sql
 SELECT
@@ -85,9 +85,14 @@ SELECT
     COUNT(*) AS trades_count
 FROM trades
 GROUP BY instrument_id
-HAVING COUNT(*) < 5
+HAVING COUNT(*) < 15
 ORDER BY trades_count;
 ```
+
+Реальный результат — одна строка: `instrument_id = 6` (`MOEX`), `trades_count = 12`. Все
+остальные инструменты, у которых вообще есть сделки, имеют 15 и больше — порог `15` подобран
+по текущим данным специально так, чтобы результат был содержательным (не пустым и не
+избыточно длинным).
 
 `TEST0` не появится в этом результате (и вообще ни в одном запросе, который строится
 `FROM trades ... GROUP BY instrument_id`), потому что `GROUP BY` группирует только те
