@@ -1,0 +1,13 @@
+instrument_id,ticker,name,asset_class,currency
+1,SBER,"Сбербанк, ПАО, ао",equity,RUB
+2,GAZP,"Газпром, ПАО, ао",equity,RUB
+3,LKOH,"Лукойл, ПАО, ао",equity,RUB
+4,ROSN,"Роснефть, ПАО, ао",equity,RUB
+5,GMKN,"ГМК Норникель, ПАО, ао",equity,RUB
+6,MOEX,"Московская Биржа, ПАО, ао",equity,RUB
+7,MTSS,"МТС, ПАО, ао",equity,RUB
+8,RUSFAR,RUSFAR RUB (индикатор ставки денежного рынка),money_market,RUB
+9,USD000UTSTOM,"Доллар США / рубль, расч. TOM",fx,RUB
+10,CNYRUB_TOM,"Китайский юань / рубль, расч. TOM",fx,RUB
+11,SU26238,ОФЗ 26238 (гособлигация РФ),bond,RUB
+12,TEST0,Тестовый инструмент (без сделок),equity,RUB
