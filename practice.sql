@@ -1,14 +1,11 @@
--- Личный рабочий файл. Выполняй только выделенный запрос или весь безопасный фрагмент.
--- В SSMS: F5. Сначала запусти database/00..03.
+-- Мой черновик для SQL Server / SSMS.
+-- Начинаю с урока 00. F5 выполняет выделенный запрос (если выделение есть).
+-- Сначала читаю SELECT; изменяющие команды применяю только по инструкциям урока.
 USE TradingTraining;
 GO
 
-SELECT TOP (10)
-       t.trade_id, t.trade_date, i.ticker, a.account_name,
-       t.side, t.quantity, t.price
-FROM dbo.trades AS t
-JOIN dbo.instruments AS i ON i.instrument_id = t.instrument_id
-JOIN dbo.accounts AS a ON a.account_id = t.account_id
-ORDER BY t.trade_id;
+-- Урок 00: покажи все инструменты.
+SELECT *
+FROM dbo.instruments;
 
--- Свои запросы пиши ниже.
+-- Мои запросы:
