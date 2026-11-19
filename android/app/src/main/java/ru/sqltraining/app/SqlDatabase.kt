@@ -93,7 +93,7 @@ class SqlDatabase(context: Context) : SQLiteOpenHelper(context, "sql_trainer.db"
                 }
             } else {
                 when (c) {
-                    ''', '"', '`' -> { quote = c; current.append(c) }
+                    '\'', '"', '`' -> { quote = c; current.append(c) }
                     ';' -> {
                         if (current.isNotBlank()) result += current.toString().trim()
                         current.clear()
