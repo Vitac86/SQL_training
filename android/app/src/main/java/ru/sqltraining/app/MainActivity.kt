@@ -49,12 +49,14 @@ fun TrainerApp(db:SqlDatabase,prefs:SharedPreferences){
  var running by remember{mutableStateOf(false)}
  var history by remember{mutableStateOf(runCatching{val j=JSONArray(prefs.getString("history","[]"));(0 until j.length()).map{j.getString(it)}}.getOrDefault(emptyList()))}
  var completed by remember{mutableStateOf((prefs.getStringSet("completed",emptySet())?:emptySet()).mapNotNull{it.toIntOrNull()}.toSet())}
+ var completedTasks by remember{mutableStateOf((prefs.getStringSet("completed_tasks",emptySet())?:emptySet()).mapNotNull{it.toIntOrNull()}.toSet())}
  var selectedLesson by remember{mutableStateOf<Lesson?>(null)}
  var activeTask by remember{mutableStateOf<PracticeTask?>(null)}
  var taskFeedback by remember{mutableStateOf<String?>(null)}
  val scope= rememberCoroutineScope()
 
  LaunchedEffect(completed){prefs.edit().putStringSet("completed",completed.map{it.toString()}.toSet()).apply()}
+ LaunchedEffect(completedTasks){prefs.edit().putStringSet("completed_tasks",completedTasks.map{it.toString()}.toSet()).apply()}
  LaunchedEffect(history){prefs.edit().putString("history",JSONArray(history).toString()).apply()}
 
  MaterialTheme(colorScheme=darkColorScheme(primary=Green,onPrimary=Bg,background=Bg,surface=Panel,onBackground=Color(0xFFEAF0F7),onSurface=Color(0xFFEAF0F7),secondary=Muted,surfaceVariant=Color(0xFF273244))){
@@ -69,7 +71,7 @@ fun TrainerApp(db:SqlDatabase,prefs:SharedPreferences){
   ){padding->Box(Modifier.fillMaxSize().padding(padding)){
    when(tab){
     0->CourseScreen(completed,onOpen={selectedLesson=it},onDone={completed=completed+it.id})
-    1->PracticeScreen(activeTask?.id){task->activeTask=task;taskFeedback=null;sql=task.starter;result=null;error=null;tab=2}
+    1->PracticeScreen(activeTask?.id,completedTasks){task->activeTask=task;taskFeedback=null;sql=task.starter;result=null;error=null;tab=2}
     2->if(selectedLesson!=null)LessonScreen(selectedLesson!!,onBack={selectedLesson=null},onTry={sql=selectedLesson!!.example;selectedLesson=null;activeTask=null},onDone={completed=completed+selectedLesson!!.id;selectedLesson=null})
       else EditorScreen(sql,{sql=it;taskFeedback=null},result,error,running,history,activeTask,taskFeedback,{sql=it},{ 
        scope.launch{running=true;error=null;taskFeedback=null
@@ -83,12 +85,13 @@ fun TrainerApp(db:SqlDatabase,prefs:SharedPreferences){
          val actual=db.run(sql);val expected=db.run(activeTask!!.expectedSql);result=actual
          val ok=actual.columns==expected.columns && actual.rows==expected.rows
          taskFeedback=if(ok)"Верно! Результат совпадает с эталоном." else "Пока не совпадает. Проверь условия, группировку и сортировку."
+         if(ok) completedTasks=completedTasks+activeTask!!.id
          history=(listOf(sql)+history.filterNot{it==sql}).take(50)
         }catch(e:Exception){error=e.message?:"Ошибка SQL"}
         running=false
        }
       })
-    else->ProgressScreen(completed,history.size,{completed=emptySet();history=emptyList()})
+    else->ProgressScreen(completed,completedTasks,history.size,{completed=emptySet();completedTasks=emptySet();history=emptyList()})
    }
   }}
  }
@@ -126,7 +129,7 @@ fun LessonScreen(lesson:Lesson,onBack:()->Unit,onTry:()->Unit,onDone:()->Unit){
 }
 
 @Composable
-fun PracticeScreen(activeId:Int?,onOpen:(PracticeTask)->Unit){
+fun PracticeScreen(activeId:Int?,completed:Set<Int>,onOpen:(PracticeTask)->Unit){
  Column(Modifier.fillMaxSize().padding(16.dp)){
   Text("Практические задания",style=MaterialTheme.typography.headlineSmall)
   Text("Реши задачу своим запросом и сравни результат с эталоном.",color=Muted)
@@ -134,8 +137,8 @@ fun PracticeScreen(activeId:Int?,onOpen:(PracticeTask)->Unit){
   LazyColumn(verticalArrangement=Arrangement.spacedBy(9.dp)){items(practiceTasks){task->
    Card(onClick={onOpen(task)},colors=CardDefaults.cardColors(containerColor=Panel),shape=RoundedCornerShape(14.dp)){
     Row(Modifier.fillMaxWidth().padding(15.dp),verticalAlignment=Alignment.CenterVertically){
-     Column(Modifier.weight(1f)){Text(task.title,style=MaterialTheme.typography.titleSmall);Text(task.description,color=Muted,fontSize=12.sp);if(task.id==activeId)Text("Открыто в редакторе",color=Green,fontSize=11.sp)}
-     Icon(Icons.Default.ChevronRight,null,tint=Green)
+     Column(Modifier.weight(1f)){Text(task.title,style=MaterialTheme.typography.titleSmall);Text(task.description,color=Muted,fontSize=12.sp);if(task.id==activeId)Text("Открыто в редакторе",color=Green,fontSize=11.sp);if(task.id in completed)Text("Решено",color=Green,fontSize=11.sp)}
+     if(task.id in completed)Icon(Icons.Default.CheckCircle,null,tint=Green)else Icon(Icons.Default.ChevronRight,null,tint=Green)
     }
    }
   }}
@@ -189,10 +192,11 @@ fun EditorScreen(
 }
 
 @Composable
-fun ProgressScreen(done:Set<Int>,historyCount:Int,onReset:()->Unit){
+fun ProgressScreen(done:Set<Int>,taskDone:Set<Int>,historyCount:Int,onReset:()->Unit){
  Column(Modifier.fillMaxSize().padding(18.dp),verticalArrangement=Arrangement.spacedBy(14.dp)){
   Text("Мой прогресс",style=MaterialTheme.typography.headlineSmall)
   Card(colors=CardDefaults.cardColors(containerColor=Panel)){Column(Modifier.padding(18.dp)){Text("${done.size} / ${lessons.size}",style=MaterialTheme.typography.headlineLarge,color=Green);Text("изученных тем");LinearProgressIndicator(progress={done.size.toFloat()/lessons.size},modifier=Modifier.fillMaxWidth().padding(top=12.dp),color=Green)}}
+  Card(colors=CardDefaults.cardColors(containerColor=Panel)){Column(Modifier.padding(18.dp)){Text("${taskDone.size} / ${practiceTasks.size}",style=MaterialTheme.typography.headlineMedium,color=Green);Text("решённых практических задач")}}
   Card(colors=CardDefaults.cardColors(containerColor=Panel)){Column(Modifier.padding(18.dp)){Text("$historyCount",style=MaterialTheme.typography.headlineMedium);Text("сохранённых запросов в истории")}}
   Text("Прогресс и история сохраняются на устройстве и доступны после перезапуска приложения.",color=Muted)
   OutlinedButton(onClick=onReset){Text("Сбросить статистику")}
