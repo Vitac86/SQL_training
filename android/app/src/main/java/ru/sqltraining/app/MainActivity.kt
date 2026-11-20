@@ -80,8 +80,10 @@ ORDER BY ticker;""".trimIndent()
    containerColor=Bg,
    topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.5.0",color=Muted,fontSize=10.sp)}},
     actions={
-        IconButton(onClick={showGithubUpdates=true}) {
-            Icon(Icons.Default.SystemUpdate,"Проверить обновления через GitHub")
+        TextButton(onClick={showGithubUpdates=true}) {
+            Icon(Icons.Default.SystemUpdate,contentDescription=null,modifier=Modifier.size(18.dp))
+            Spacer(Modifier.width(4.dp))
+            Text("Обновить",fontSize=12.sp)
         }
         IconButton(enabled=!running,onClick={showResetDialog=true}) {
             Icon(Icons.Default.RestartAlt,"Сбросить учебную БД")
