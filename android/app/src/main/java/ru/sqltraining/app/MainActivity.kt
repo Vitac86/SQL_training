@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -43,13 +42,19 @@ class MainActivity:ComponentActivity(){
 @Composable
 fun TrainerApp(db:SqlDatabase,prefs:SharedPreferences){
  var tab by remember{mutableIntStateOf(2)}
- var sql by remember{mutableStateOf("SELECT ticker,name,currency\\nFROM instruments\\nORDER BY ticker;")}
+ val defaultSql = """SELECT ticker, name, currency
+FROM instruments
+ORDER BY ticker;""".trimIndent()
+ var sql by remember { mutableStateOf(prefs.getString("editor_sql", defaultSql) ?: defaultSql) }
  var result by remember{mutableStateOf<QueryResult?>(null)}
  var error by remember{mutableStateOf<String?>(null)}
  var running by remember{mutableStateOf(false)}
  var history by remember{mutableStateOf(runCatching{val j=JSONArray(prefs.getString("history","[]"));(0 until j.length()).map{j.getString(it)}}.getOrDefault(emptyList()))}
  var completed by remember{mutableStateOf((prefs.getStringSet("completed",emptySet())?:emptySet()).mapNotNull{it.toIntOrNull()}.toSet())}
  var completedTasks by remember{mutableStateOf((prefs.getStringSet("completed_tasks",emptySet())?:emptySet()).mapNotNull{it.toIntOrNull()}.toSet())}
+ var schema by remember { mutableStateOf(emptyList<DatabaseObject>()) }
+ var savedQueries by remember { mutableStateOf(SavedQueryStore.load(prefs)) }
+ var showResetDialog by remember { mutableStateOf(false) }
  var selectedLesson by remember{mutableStateOf<Lesson?>(null)}
  var activeTask by remember{mutableStateOf<PracticeTask?>(null)}
  var taskFeedback by remember{mutableStateOf<String?>(null)}
@@ -58,42 +63,111 @@ fun TrainerApp(db:SqlDatabase,prefs:SharedPreferences){
  LaunchedEffect(completed){prefs.edit().putStringSet("completed",completed.map{it.toString()}.toSet()).apply()}
  LaunchedEffect(completedTasks){prefs.edit().putStringSet("completed_tasks",completedTasks.map{it.toString()}.toSet()).apply()}
  LaunchedEffect(history){prefs.edit().putString("history",JSONArray(history).toString()).apply()}
+ LaunchedEffect(sql) { prefs.edit().putString("editor_sql", sql).apply() }
+ LaunchedEffect(savedQueries) { SavedQueryStore.save(prefs, savedQueries) }
+ LaunchedEffect(Unit) {
+   try { schema = db.schema() }
+   catch (e: Exception) { error = SqlErrors.explain(e.message ?: "Не удалось загрузить схему БД") }
+ }
 
  MaterialTheme(colorScheme=darkColorScheme(primary=Green,onPrimary=Bg,background=Bg,surface=Panel,onBackground=Color(0xFFEAF0F7),onSurface=Color(0xFFEAF0F7),secondary=Muted,surfaceVariant=Color(0xFF273244))){
   Scaffold(
    containerColor=Bg,
-   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.2",color=Muted,fontSize=10.sp)}},
-    actions={IconButton(onClick={scope.launch{db.reset();result=null;error=null;taskFeedback=null}}){Icon(Icons.Default.RestartAlt,"Сбросить учебную БД")}},
+   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.3",color=Muted,fontSize=10.sp)}},
+    actions={IconButton(enabled=!running,onClick={showResetDialog=true}){Icon(Icons.Default.RestartAlt,"Сбросить учебную БД")}},
     colors=TopAppBarDefaults.topAppBarColors(containerColor=Bg))},
    bottomBar={NavigationBar(containerColor=Panel){listOf("Курс","Практика","SQL","Прогресс").forEachIndexed{i,label->
     NavigationBarItem(selected=tab==i,onClick={tab=i;selectedLesson=null},icon={Icon(listOf(Icons.Default.School,Icons.Default.FitnessCenter,Icons.Default.Code,Icons.Default.Insights)[i],label)},label={Text(label)})
    }}}
   ){padding->Box(Modifier.fillMaxSize().padding(padding)){
    when(tab){
-    0->CourseScreen(completed,onOpen={selectedLesson=it},onDone={completed=completed+it.id})
+    0->CourseScreen(completed,onOpen={selectedLesson=it;tab=2},onDone={completed=completed+it.id})
     1->PracticeScreen(activeTask?.id,completedTasks){task->activeTask=task;taskFeedback=null;sql=task.starter;result=null;error=null;tab=2}
-    2->if(selectedLesson!=null)LessonScreen(selectedLesson!!,onBack={selectedLesson=null},onTry={sql=selectedLesson!!.example;selectedLesson=null;activeTask=null},onDone={completed=completed+selectedLesson!!.id;selectedLesson=null})
-      else EditorScreen(sql,{sql=it;taskFeedback=null},result,error,running,history,activeTask,taskFeedback,{sql=it},{ 
-       scope.launch{running=true;error=null;taskFeedback=null
-        try{val r=db.run(sql);result=r;history=(listOf(sql)+history.filterNot{it==sql}).take(50)}
-        catch(e:Exception){result=null;error=e.message?:"Ошибка SQL"}
-        running=false
-       }
-      },{
-       scope.launch{running=true;error=null;taskFeedback=null
-        try{
-         val actual=db.run(sql);val expected=db.run(activeTask!!.expectedSql);result=actual
-         val ok=actual.columns==expected.columns && actual.rows==expected.rows
-         taskFeedback=if(ok)"Верно! Результат совпадает с эталоном." else "Пока не совпадает. Проверь условия, группировку и сортировку."
-         if(ok) completedTasks=completedTasks+activeTask!!.id
-         history=(listOf(sql)+history.filterNot{it==sql}).take(50)
-        }catch(e:Exception){error=e.message?:"Ошибка SQL"}
-        running=false
-       }
-      })
-    else->ProgressScreen(completed,completedTasks,history.size,{completed=emptySet();completedTasks=emptySet();history=emptyList()})
+    2 -> if (selectedLesson != null) {
+       LessonScreen(
+         selectedLesson!!,
+         onBack = { selectedLesson = null },
+         onTry = { sql = selectedLesson!!.example; selectedLesson = null; activeTask = null },
+         onDone = { completed = completed + selectedLesson!!.id; selectedLesson = null }
+       )
+     } else {
+       EditorScreen(
+         sql = sql,
+         onSql = { sql = it; taskFeedback = null },
+         result = result,
+         error = error,
+         running = running,
+         history = history,
+         task = activeTask,
+         feedback = taskFeedback,
+         schema = schema,
+         savedQueries = savedQueries,
+         onSave = { query ->
+           savedQueries = (listOf(query) + savedQueries.filterNot { it.name.equals(query.name, ignoreCase = true) }).take(100)
+         },
+         onDeleteSaved = { name -> savedQueries = savedQueries.filterNot { it.name == name } },
+         onHistory = { sql = it; taskFeedback = null },
+         onRun = {
+           scope.launch {
+             running = true; error = null; taskFeedback = null
+             try {
+               result = db.run(sql)
+               schema = db.schema()
+               history = (listOf(sql) + history.filterNot { it == sql }).take(50)
+             } catch (e: Exception) {
+               result = null; error = e.message ?: "Ошибка SQL"
+             } finally { running = false }
+           }
+         },
+         onCheck = {
+           scope.launch {
+             val chosen = activeTask
+             if (chosen != null) {
+               running = true; error = null; taskFeedback = null
+               try {
+                 val (actual, correct) = db.assess(sql, chosen.expectedSql)
+                 result = actual
+                 taskFeedback = if (correct) "Верно! Результат совпадает с эталоном."
+                     else "Пока не совпадает. Проверь условия, состав столбцов и сортировку."
+                 if (correct) completedTasks = completedTasks + chosen.id
+                 history = (listOf(sql) + history.filterNot { it == sql }).take(50)
+               } catch (e: Exception) {
+                 result = null; error = e.message ?: "Ошибка SQL"
+               } finally { running = false }
+             }
+           }
+         }
+       )
+     }
+     else->ProgressScreen(completed,completedTasks,history.size,{completed=emptySet();completedTasks=emptySet();history=emptyList()})
    }
   }}
+  if (showResetDialog) {
+    AlertDialog(
+      onDismissRequest = { showResetDialog = false },
+      title = { Text("Сбросить учебную базу?") },
+      text = { Text("Все изменения данных и созданные тобой таблицы будут удалены. История, прогресс и сохранённые запросы останутся.") },
+      confirmButton = {
+        TextButton(onClick = {
+          showResetDialog = false
+          scope.launch {
+            running = true
+            try {
+              db.reset()
+              schema = db.schema()
+              result = null
+              error = null
+              taskFeedback = null
+            } catch (e: Exception) {
+              error = SqlErrors.explain(e.message ?: "Не удалось сбросить базу")
+              tab = 2
+            } finally { running = false }
+          }
+        }) { Text("Сбросить") }
+      },
+      dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Отмена") } }
+    )
+  }
  }
 }
 
@@ -142,52 +216,6 @@ fun PracticeScreen(activeId:Int?,completed:Set<Int>,onOpen:(PracticeTask)->Unit)
     }
    }
   }}
- }
-}
-
-@Composable
-fun EditorScreen(
- sql:String,onSql:(String)->Unit,result:QueryResult?,error:String?,running:Boolean,history:List<String>,
- task:PracticeTask?,feedback:String?,onHistory:(String)->Unit,onRun:()->Unit,onCheck:()->Unit
-){
- Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=8.dp)){
-  Row(verticalAlignment=Alignment.CenterVertically){Text("SQL Playground",style=MaterialTheme.typography.titleLarge,modifier=Modifier.weight(1f));Text("LOCAL DB",color=Green,fontSize=10.sp)}
-  Text("SQLite • запросы выполняются на телефоне без интернета",color=Muted,fontSize=10.sp)
-  if(task!=null){
-   Surface(color=Color(0xFF20372F),shape=RoundedCornerShape(10.dp),modifier=Modifier.fillMaxWidth().padding(top=7.dp)){
-    Column(Modifier.padding(10.dp)){Text("ЗАДАНИЕ ${task.id}: ${task.title}",color=Green,fontSize=11.sp);Text(task.description,fontSize=12.sp);Text("Подсказка: ${task.hint}",color=Muted,fontSize=11.sp)}
-   }
-  }
-  Spacer(Modifier.height(7.dp))
-  Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(5.dp)){
-   listOf("SELECT","WHERE","JOIN","GROUP BY","ORDER BY","COUNT(*)").forEach{word->AssistChip(onClick={onSql(sql.trimEnd()+" "+word+" ")},label={Text(word,fontSize=10.sp)})}
-  }
-  Surface(color=Panel,shape=RoundedCornerShape(14.dp),modifier=Modifier.weight(.43f).fillMaxWidth()){
-   BasicTextField(value=sql,onValueChange=onSql,modifier=Modifier.fillMaxSize().padding(13.dp).verticalScroll(rememberScrollState()),textStyle=androidx.compose.ui.text.TextStyle(color=Color(0xFFE6EDF7),fontFamily=FontFamily.Monospace,fontSize=13.sp,lineHeight=19.sp),decorationBox={inner->Box{if(sql.isEmpty())Text("Напиши SQL-запрос…",color=Muted);inner()}})
-  }
-  Spacer(Modifier.height(7.dp))
-  Row(horizontalArrangement=Arrangement.spacedBy(7.dp)){
-   Button(onClick=onRun,enabled=!running,modifier=Modifier.weight(1f)){if(running)CircularProgressIndicator(Modifier.size(15.dp),strokeWidth=2.dp)else Icon(Icons.Default.PlayArrow,null);Text("Запустить")}
-   if(task!=null)OutlinedButton(onClick=onCheck,enabled=!running){Icon(Icons.Default.FactCheck,null);Text("Проверить")}
-  }
-  if(feedback!=null)Text(feedback,color=if(feedback.startsWith("Верно"))Green else Color(0xFFFFC66D),fontSize=12.sp,modifier=Modifier.padding(top=5.dp))
-  Spacer(Modifier.height(7.dp))
-  Text("Результат",style=MaterialTheme.typography.titleMedium)
-  if(error!=null)Surface(color=Color(0xFF44252B),shape=RoundedCornerShape(10.dp)){Text(error,Modifier.fillMaxWidth().padding(10.dp),color=Color(0xFFFFB7B7),fontSize=12.sp)}
-  else if(result!=null){
-   Text("${result.message} • ${result.elapsedMs} мс • ${result.statementsExecuted} команд",color=Muted,fontSize=10.sp)
-   if(result.columns.isNotEmpty())Row(Modifier.fillMaxWidth().weight(.35f,false).horizontalScroll(rememberScrollState())){
-    Column{
-     Row{result.columns.forEach{Text(it,Modifier.width(125.dp).padding(6.dp),color=Green,fontSize=11.sp)}}
-     HorizontalDivider(color=Muted.copy(alpha=.25f))
-     result.rows.take(100).forEach{row->Row{row.forEach{Text(it?:"NULL",Modifier.width(125.dp).padding(6.dp),fontSize=11.sp,maxLines=2)}}}
-    }
-   }
-  }else Text("Здесь появится результат выполнения запроса.",color=Muted,fontSize=11.sp)
-  if(history.isNotEmpty()){
-   Spacer(Modifier.height(5.dp));Text("История запросов",color=Muted,fontSize=10.sp)
-   Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(5.dp)){history.take(5).forEach{q->AssistChip(onClick={onHistory(q)},label={Text(q.replace("\\n"," ").take(20),fontSize=9.sp)})}}
-  }
  }
 }
 
