@@ -64,7 +64,14 @@ fun EditorScreen(
     onHistory: (String) -> Unit,
     onRun: () -> Unit,
     onCheck: () -> Unit,
-    onNextTask: () -> Unit
+    onNextTask: () -> Unit,
+    previousTask: PracticeTask?,
+    nextTask: PracticeTask?,
+    taskNumber: Int,
+    taskCount: Int,
+    onNavigateTask: (PracticeTask) -> Unit,
+    onTaskList: () -> Unit,
+    onTaskLesson: () -> Unit
 ) {
     var showSave by remember { mutableStateOf(false) }
     var showSaved by remember { mutableStateOf(false) }
@@ -123,8 +130,13 @@ fun EditorScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(
-                                "ЗАДАНИЕ #${task.id} · ${task.difficultyName}",
+                                "УРОК ${task.lessonId + 1} · ${lessons.getOrNull(task.lessonId)?.title ?: task.topic}",
                                 color = accent,
+                                fontSize = 11.sp
+                            )
+                            Text(
+                                "Задание $taskNumber/$taskCount · ID #${task.id} · ${task.difficultyName}",
+                                color = muted,
                                 fontSize = 11.sp
                             )
                             Text(task.title, style = MaterialTheme.typography.titleSmall)
@@ -144,7 +156,23 @@ fun EditorScreen(
                         maxLines = if (taskExpanded) Int.MAX_VALUE else 2
                     )
                     if (taskExpanded) {
+                        TextButton(
+                            onClick = onTaskLesson,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("Повторить урок ${task.lessonId + 1}", fontSize = 12.sp)
+                        }
+                    }
+                    if (taskExpanded) {
                         Text(task.topic, color = accent, fontSize = 11.sp, modifier = Modifier.padding(top = 5.dp))
+                        if (task.expectedSql.contains("LIMIT ", ignoreCase = true)) {
+                            Text(
+                                "Ограничение строк: TOP (n) — после SELECT в SQL Server; " +
+                                    "LIMIT n — в конце запроса SQLite. Тренажёр принимает оба варианта.",
+                                color = muted,
+                                fontSize = 11.sp
+                            )
+                        }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TextButton(
                                 onClick = { if (hintStep < task.hints.size) hintStep++ },
@@ -167,6 +195,32 @@ fun EditorScreen(
                         }
                     }
                 }
+            }
+        }
+
+        if (task != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = { previousTask?.let(onNavigateTask) },
+                    enabled = previousTask != null,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 5.dp),
+                    modifier = Modifier.weight(1f)
+                ) { Text("← Назад", fontSize = 12.sp) }
+                OutlinedButton(
+                    onClick = onTaskList,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 5.dp),
+                    modifier = Modifier.weight(1f)
+                ) { Text("К списку", fontSize = 12.sp) }
+                OutlinedButton(
+                    onClick = { nextTask?.let(onNavigateTask) },
+                    enabled = nextTask != null,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 5.dp),
+                    modifier = Modifier.weight(1f)
+                ) { Text("Далее →", fontSize = 12.sp) }
             }
         }
 

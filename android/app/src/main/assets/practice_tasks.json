@@ -7,7 +7,7 @@
       "id": 1,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 0,
+      "lessonId": 3,
       "title": "Покупки клиентов",
       "description": "Верни все столбцы сделок BUY, отсортируй по trade_id.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -23,7 +23,7 @@
       "id": 2,
       "topic": "Агрегации",
       "difficulty": 1,
-      "lessonId": 10,
+      "lessonId": 11,
       "title": "Активность счетов",
       "description": "Для каждого account_id выведи account_id и trades_count — количество сделок по возрастанию account_id.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -45,17 +45,17 @@
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
       "expectedSql": "SELECT trade_id,price FROM trades ORDER BY price DESC,trade_id LIMIT 3;",
       "hints": [
-        "Сначала сортируй цену по убыванию, затем используй LIMIT.",
-        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
-        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+        "Упорядочи сделки по price DESC, затем по trade_id. Для трёх первых строк можно использовать TOP (3) или LIMIT 3.",
+        "В SQL Server: SELECT TOP (3) ... FROM ... ORDER BY ... . В SQLite: SELECT ... FROM ... ORDER BY ... LIMIT 3.",
+        "Нужные столбцы: trade_id, price. Сортировка: price DESC, trade_id. Ограничение: TOP (3) после SELECT либо LIMIT 3 после ORDER BY."
       ],
-      "explanation": "ORDER BY price DESC,trade_id делает отбор TOP-3 детерминированным."
+      "explanation": "Сначала сортируем сделки по цене по убыванию; дополнительный ключ trade_id делает результат устойчивым. SQL Server применяет TOP (3), а SQLite LIMIT 3; Android-тренажёр преобразует первый вариант во второй."
     },
     {
       "id": 4,
       "topic": "Агрегации",
       "difficulty": 1,
-      "lessonId": 10,
+      "lessonId": 11,
       "title": "Комиссия по счетам",
       "description": "Выведи account_id и total_fee — сумму комиссии каждого счёта, отсортированную по account_id.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -152,38 +152,38 @@
       "topic": "Основы и SELECT",
       "difficulty": 1,
       "lessonId": 0,
-      "title": "Список инструментов",
-      "description": "Покажи instrument_id, ticker, name из instruments по возрастанию instrument_id.",
+      "title": "Содержимое справочника",
+      "description": "Выведи все столбцы таблицы instruments. Пока достаточно SELECT и FROM — без сортировки и условий.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
-      "expectedSql": "SELECT instrument_id,ticker,name FROM instruments ORDER BY instrument_id;",
+      "expectedSql": "SELECT * FROM instruments;",
       "hints": [
-        "Выбирай только нужные поля.",
-        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
-        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+        "SELECT * означает «показать все столбцы». Источник указывается после FROM.",
+        "Нужна только таблица instruments, дополнительные условия и сортировка пока не нужны.",
+        "Построй запрос из двух частей: SELECT * и FROM instruments."
       ],
-      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+      "explanation": "SELECT * возвращает все столбцы таблицы. На этом шаге мы знакомимся с содержимым таблицы, а не с фильтрацией и сортировкой."
     },
     {
       "id": 11,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 0,
-      "title": "Все счета",
-      "description": "Выведи account_id, account_name, strategy, отсортируй по account_id.",
+      "lessonId": 1,
+      "title": "Нужные поля счетов",
+      "description": "Из accounts выведи только account_id, account_name и strategy. Порядок строк пока не важен.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
-      "expectedSql": "SELECT account_id,account_name,strategy FROM accounts ORDER BY account_id;",
+      "expectedSql": "SELECT account_id,account_name,strategy FROM accounts;",
       "hints": [
-        "Источник — accounts.",
-        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
-        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+        "SELECT позволяет перечислить нужные названия столбцов.",
+        "Источник строк — accounts. После SELECT нужны три поля из условия.",
+        "Напиши SELECT account_id,account_name,strategy FROM accounts."
       ],
-      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+      "explanation": "Имена столбцов после SELECT определяют состав результата; остальные поля таблицы в выборку не попадут."
     },
     {
       "id": 12,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Валюты инструментов",
       "description": "Выведи ticker и currency в алфавитном порядке тикеров.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -199,7 +199,7 @@
       "id": 13,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Коды сделок",
       "description": "Покажи trade_id, trade_date и side первых 12 сделок.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -215,7 +215,7 @@
       "id": 14,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Первая пятёрка счетов",
       "description": "Выведи account_name и risk_limit_rub первых пяти счетов по account_id.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -279,7 +279,7 @@
       "id": 18,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Классы активов",
       "description": "Выведи уникальные asset_class по алфавиту.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -295,7 +295,7 @@
       "id": 19,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Торговые стороны",
       "description": "Выведи уникальные значения side в алфавитном порядке.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -311,7 +311,7 @@
       "id": 20,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Даты торгов",
       "description": "Выведи уникальные trade_date от ранней к поздней.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -327,7 +327,7 @@
       "id": 21,
       "topic": "Основы и SELECT",
       "difficulty": 1,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Коды стратегии",
       "description": "Покажи уникальные strategy по возрастанию.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -343,7 +343,7 @@
       "id": 22,
       "topic": "Основы и SELECT",
       "difficulty": 2,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Условная сумма сделки",
       "description": "Для первых 10 сделок по ID покажи trade_id, quantity, price и example_value = quantity * price.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -359,7 +359,7 @@
       "id": 23,
       "topic": "Основы и SELECT",
       "difficulty": 2,
-      "lessonId": 1,
+      "lessonId": 10,
       "title": "Комиссия с округлением",
       "description": "Выведи первые 12 trade_id и commission_rounded = ROUND(commission,0), сортировка по trade_id.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -391,7 +391,7 @@
       "id": 25,
       "topic": "Основы и SELECT",
       "difficulty": 2,
-      "lessonId": 1,
+      "lessonId": 2,
       "title": "Количество и цена",
       "description": "Для десяти сделок с наименьшим trade_id верни trade_id, quantity, price, сортировка по trade_id.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -1015,7 +1015,7 @@
       "id": 64,
       "topic": "Агрегации",
       "difficulty": 1,
-      "lessonId": 10,
+      "lessonId": 11,
       "title": "Сделки BUY и SELL",
       "description": "Покажи side и trades_count по каждой стороне, сортировка по side.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -1479,7 +1479,7 @@
       "id": 93,
       "topic": "Соединения JOIN",
       "difficulty": 3,
-      "lessonId": 13,
+      "lessonId": 16,
       "title": "Доля покупок по счетам",
       "description": "Для всех счетов покажи account_name, buy_count — количество BUY.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2711,7 +2711,7 @@
       "id": 170,
       "topic": "Контроль качества данных",
       "difficulty": 2,
-      "lessonId": 9,
+      "lessonId": 11,
       "title": "Поиск дублей trade_id",
       "description": "Покажи trade_id и cnt для ID сделок, встречающихся более одного раза.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2727,7 +2727,7 @@
       "id": 171,
       "topic": "Контроль качества данных",
       "difficulty": 2,
-      "lessonId": 9,
+      "lessonId": 11,
       "title": "Поиск повторяющихся тикеров",
       "description": "Покажи ticker и cnt только если один тикер встречается более одного раза.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2743,7 +2743,7 @@
       "id": 172,
       "topic": "Контроль качества данных",
       "difficulty": 2,
-      "lessonId": 8,
+      "lessonId": 12,
       "title": "Осиротевшие сделки по инструменту",
       "description": "Покажи trade_id и instrument_id сделок, у которых нет инструмента.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2759,7 +2759,7 @@
       "id": 173,
       "topic": "Контроль качества данных",
       "difficulty": 2,
-      "lessonId": 8,
+      "lessonId": 12,
       "title": "Осиротевшие сделки по счёту",
       "description": "Покажи trade_id и account_id сделок, не связанных со счетом.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2775,7 +2775,7 @@
       "id": 174,
       "topic": "Контроль качества данных",
       "difficulty": 2,
-      "lessonId": 8,
+      "lessonId": 11,
       "title": "Повторные дневные цены",
       "description": "Покажи price_date, instrument_id, cnt для повторных пар.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2791,7 +2791,7 @@
       "id": 175,
       "topic": "Контроль качества данных",
       "difficulty": 3,
-      "lessonId": 8,
+      "lessonId": 11,
       "title": "Повторная ликвидность по ключу",
       "description": "Покажи price_date, instrument_id, cnt для дублирующихся пар в liquidity.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2839,7 +2839,7 @@
       "id": 178,
       "topic": "Контроль качества данных",
       "difficulty": 3,
-      "lessonId": 9,
+      "lessonId": 12,
       "title": "Отсутствие цены закрытия на дату сделки",
       "description": "Покажи trade_id, trade_date и instrument_id, если для сделки отсутствует дневная цена инструмента на дату исполнения.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2871,7 +2871,7 @@
       "id": 180,
       "topic": "Контроль качества данных",
       "difficulty": 3,
-      "lessonId": 8,
+      "lessonId": 12,
       "title": "Отсутствующие котировки у инструментов",
       "description": "Выведи ticker инструментов без записей в daily_prices.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2887,7 +2887,7 @@
       "id": 181,
       "topic": "Контроль качества данных",
       "difficulty": 3,
-      "lessonId": 9,
+      "lessonId": 12,
       "title": "Сопоставление числа строк",
       "description": "Одним SELECT покажи trade_rows и joined_rows: число исходных сделок и число строк после корректного JOIN с instruments.",
       "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
@@ -2978,6 +2978,198 @@
         "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
       ],
       "explanation": "UNION соединяет совместимые результирующие наборы и убирает повторы; UNION ALL сохраняет все совпадающие строки. Порядок задаётся в конце."
+    },
+    {
+      "id": 187,
+      "topic": "NULL",
+      "difficulty": 1,
+      "lessonId": 5,
+      "title": "Проверить пропущенную комиссию",
+      "description": "Покажи trade_id сделок, у которых комиссия неизвестна (NULL). Отсортируй по trade_id.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id FROM trades WHERE commission IS NULL ORDER BY trade_id;",
+      "hints": [
+        "В SQL NULL проверяется через IS NULL, а не через знак равенства.",
+        "Открой урок 6 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "При NOT NULL в схеме неизвестной комиссии быть не должно. Пустой результат означает отсутствие таких строк."
+    },
+    {
+      "id": 188,
+      "topic": "NULL",
+      "difficulty": 1,
+      "lessonId": 5,
+      "title": "Известная комиссия",
+      "description": "Покажи trade_id и commission первых пяти сделок, где комиссия не равна NULL, по ID.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,commission FROM trades WHERE commission IS NOT NULL ORDER BY trade_id LIMIT 5;",
+      "hints": [
+        "В условии пригодится IS NOT NULL.",
+        "Открой урок 6 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "IS NOT NULL исключает строки с неизвестным значением. LIMIT возвращает первые пять после сортировки."
+    },
+    {
+      "id": 189,
+      "topic": "NULL",
+      "difficulty": 1,
+      "lessonId": 5,
+      "title": "NULL как самостоятельное значение",
+      "description": "Выведи один столбец missing_value со значением NULL.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT NULL AS missing_value;",
+      "hints": [
+        "Значение NULL записывается без кавычек.",
+        "Открой урок 6 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "NULL — отсутствие значения. SQL вернёт одну строку с NULL, это не то же самое, что ноль."
+    },
+    {
+      "id": 190,
+      "topic": "Типы данных",
+      "difficulty": 1,
+      "lessonId": 6,
+      "title": "Каким типом хранится число",
+      "description": "Покажи integer_type и text_type для числа 10 и текста '10', используя typeof.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT typeof(10) AS integer_type,typeof('10') AS text_type;",
+      "hints": [
+        "В SQLite функция typeof() показывает внутренний класс значения.",
+        "Открой урок 7 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "10 — число, '10' — текст. Обрати внимание, что в SQL Server типизация устроена иначе."
+    },
+    {
+      "id": 191,
+      "topic": "Типы данных",
+      "difficulty": 1,
+      "lessonId": 6,
+      "title": "Тип значения цены сделки",
+      "description": "Для первых пяти сделок покажи trade_id и price_type — тип значения price.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,typeof(price) AS price_type FROM trades ORDER BY trade_id LIMIT 5;",
+      "hints": [
+        "Значение типа можно получить через typeof(price).",
+        "Открой урок 7 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "В SQLite типизация зависит от хранимого значения. В SQL Server тип DECIMAL описывает столбец строже."
+    },
+    {
+      "id": 192,
+      "topic": "Ключи",
+      "difficulty": 1,
+      "lessonId": 7,
+      "title": "Идентификаторы сделок",
+      "description": "Выведи trade_id первых десяти строк trades по возрастанию ID.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id FROM trades ORDER BY trade_id LIMIT 10;",
+      "hints": [
+        "trade_id — первичный ключ таблицы trades.",
+        "Открой урок 8 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "Первичный ключ уникален; явный ORDER BY позволяет видеть последовательность ID."
+    },
+    {
+      "id": 193,
+      "topic": "Ключи",
+      "difficulty": 1,
+      "lessonId": 7,
+      "title": "Идентификаторы инструментов",
+      "description": "Покажи instrument_id и ticker первых пяти инструментов по instrument_id.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,ticker FROM instruments ORDER BY instrument_id LIMIT 5;",
+      "hints": [
+        "Первичный ключ инструмента — instrument_id.",
+        "Открой урок 8 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "Первичный ключ отличает строки, даже если бизнес-название меняется."
+    },
+    {
+      "id": 194,
+      "topic": "Составные ключи",
+      "difficulty": 1,
+      "lessonId": 8,
+      "title": "Уникальная пара дата и инструмент",
+      "description": "Покажи price_date и instrument_id первых восьми записей daily_prices по дате и ID инструмента.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,instrument_id FROM daily_prices ORDER BY price_date,instrument_id LIMIT 8;",
+      "hints": [
+        "В этой таблице первичный ключ составлен из двух полей.",
+        "Открой урок 9 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "Каждая дата может повторяться для разных инструментов, но одна пара (дата, инструмент) не повторяется."
+    },
+    {
+      "id": 195,
+      "topic": "Составные ключи",
+      "difficulty": 1,
+      "lessonId": 8,
+      "title": "Несколько инструментов на одну дату",
+      "description": "Для даты 2024-01-09 выведи instrument_id и price_date из daily_prices по instrument_id.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,price_date FROM daily_prices WHERE price_date='2024-01-09' ORDER BY instrument_id;",
+      "hints": [
+        "Одна дата соответствует нескольким инструментам.",
+        "Открой урок 9 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "Здесь видно, почему одного price_date недостаточно как первичного ключа."
+    },
+    {
+      "id": 196,
+      "topic": "Итоговая практика",
+      "difficulty": 3,
+      "lessonId": 24,
+      "title": "Итоговый отчёт по счетам",
+      "description": "Покажи account_name, trades_count и fees для каждого счёта, включая счёт без сделок. Сортировка по имени.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name,COUNT(t.trade_id) AS trades_count,COALESCE(SUM(t.commission),0) AS fees FROM accounts a LEFT JOIN trades t ON t.account_id=a.account_id GROUP BY a.account_id,a.account_name ORDER BY a.account_name;",
+      "hints": [
+        "Используй accounts LEFT JOIN trades и два агрегата.",
+        "Открой урок 25 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "Этот отчёт объединяет внешнюю связь и агрегирование; COUNT(trade_id) возвращает 0 для пустого счёта."
+    },
+    {
+      "id": 197,
+      "topic": "Итоговая практика",
+      "difficulty": 3,
+      "lessonId": 24,
+      "title": "Тикеры и число исполнений",
+      "description": "Для каждого ticker выведи executions — количество сделок, включая инструменты без сделок.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,COUNT(t.trade_id) AS executions FROM instruments i LEFT JOIN trades t ON t.instrument_id=i.instrument_id GROUP BY i.instrument_id,i.ticker ORDER BY i.ticker;",
+      "hints": [
+        "Слева оставь instruments, иначе TEST0 исчезнет.",
+        "Открой урок 25 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "LEFT JOIN сохраняет все инструменты. COUNT(t.trade_id) не считает несуществующие сделки."
+    },
+    {
+      "id": 198,
+      "topic": "Итоговая практика",
+      "difficulty": 3,
+      "lessonId": 24,
+      "title": "Покупки и продажи в отчёте",
+      "description": "По каждому счёту покажи account_name, buy_trades и sell_trades, включая счета без сделок.",
+      "starter": "-- Напиши свой запрос\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name,SUM(CASE WHEN t.side='BUY' THEN 1 ELSE 0 END) AS buy_trades,SUM(CASE WHEN t.side='SELL' THEN 1 ELSE 0 END) AS sell_trades FROM accounts a LEFT JOIN trades t ON t.account_id=a.account_id GROUP BY a.account_id,a.account_name ORDER BY a.account_name;",
+      "hints": [
+        "Используй два условных SUM(CASE...) и LEFT JOIN.",
+        "Открой урок 25 и проверь пример запроса по теме.",
+        "Проверь названия столбцов и порядок SQL-конструкций, затем выполни запрос."
+      ],
+      "explanation": "Условные агрегаты считают покупки и продажи отдельно, включая нули для неактивного счёта."
     }
   ]
 }

@@ -23,9 +23,31 @@ def main() -> None:
     catalog = json.loads(DATA.read_text(encoding="utf-8"))
     assert catalog["version"] == 1, "Unexpected catalog version"
     tasks = catalog["tasks"]
-    assert len(tasks) >= 150, "A substantial practice catalog is required"
+    assert len(tasks) >= 198, "Expected the complete 198-task course catalog"
     ids = [t["id"] for t in tasks]
     assert ids == list(range(1, len(tasks) + 1)), "Task IDs must be stable, consecutive and unique"
+    # Historical task IDs are not the curriculum sequence. Lessons and
+    # prerequisite SQL constructs determine the pedagogical order.
+    lesson_order = sorted(tasks, key=lambda item: (item["lessonId"], item["difficulty"], item["id"]))
+    assert [item["id"] for item in lesson_order[:3]] == [10, 11, 3], "Broken first lessons"
+    prerequisites = (
+        (2, r"\b(?:LIMIT|DISTINCT)\b|\bORDER\s+BY\b"),
+        (3, r"\bWHERE\b"),
+        (10, r"\b(?:COUNT|SUM|AVG|MIN|MAX|ROUND)\s*\("),
+        (11, r"\bGROUP\s+BY\b|\bHAVING\b"),
+        (12, r"\bJOIN\b"),
+        (15, r"^\s*WITH\b"),
+        (16, r"\bCASE\b"),
+        (17, r"\bSTRFTIME\s*\("),
+        (18, r"\b(?:ROW_NUMBER|RANK|DENSE_RANK)\s*\("),
+        (19, r"\b(?:LAG|LEAD)\s*\("),
+    )
+    for item in tasks:
+        for min_lesson, pattern in prerequisites:
+            if re.search(pattern, item["expectedSql"], flags=re.I) and item["lessonId"] < min_lesson:
+                raise AssertionError(
+                    f"Task #{item['id']} uses a concept from lesson {min_lesson + 1} before it is taught"
+                )
     refs = set()
     for item in tasks:
         assert 1 <= item["difficulty"] <= 3, item["id"]
@@ -79,7 +101,7 @@ def main() -> None:
     assert [g["id"] for g in guides["guides"]] == list(range(32))
     assert all(len(g["steps"]) >= 2 for g in guides["guides"])
 
-    print(f"PASS: {len(tasks)} unique reference SQL tasks; {len(by_topic)} topics.")
+    print(f"PASS: {len(tasks)} unique reference SQL tasks; {len(by_topic)} topics; lesson prerequisites OK.")
     print(f"Levels: {dict(sorted(by_level.items()))}")
     print(f"Maximum reference rows: {max_rows} (task #{max_id})")
     print(f"Intentionally empty reference results: {len(empty)}")

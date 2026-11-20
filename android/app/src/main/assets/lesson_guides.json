@@ -29,16 +29,17 @@
     },
     {
       "id": 2,
-      "what": "ORDER BY сортирует результат. LIMIT задаёт, сколько первых строк показать после сортировки.",
-      "why": "Когда мы просим 5 последних сделок, без явного порядка слово «последних» не имеет строгого смысла.",
+      "what": "ORDER BY сортирует результат, DISTINCT убирает повторы, а TOP / LIMIT оставляют определённое количество строк. Это три разные задачи.",
+      "why": "Если нужны три сделки с самой высокой ценой, сначала задаём порядок по price DESC и trade_id, затем ограничиваем результат тремя строками.",
       "steps": [
-        "Для новых сделок сортируй trade_id DESC.",
-        "После ORDER BY добавь LIMIT 5.",
-        "При равных значениях сортируй дополнительным полем для устойчивого порядка."
+        "Сначала напиши SELECT trade_id, price FROM trades ORDER BY price DESC, trade_id.",
+        "В SQL Server добавь TOP (3) сразу после SELECT: SELECT TOP (3) trade_id, price FROM trades ORDER BY price DESC, trade_id.",
+        "В SQLite аналог записывается в конце: SELECT trade_id, price FROM trades ORDER BY price DESC, trade_id LIMIT 3. Наше Android-приложение принимает обе формы.",
+        "Если нужны уникальные значения, используй SELECT DISTINCT side FROM trades ORDER BY side. DISTINCT не ограничивает число строк."
       ],
-      "pitfall": "Без ORDER BY порядок строк не гарантирован. В SQL Server аналог лимита часто записывается через TOP.",
-      "question": "Почему LIMIT 5 без ORDER BY не означает пять последних сделок?",
-      "answer": "Потому что движок может возвращать строки в любом порядке; LIMIT отсекает первые пять в выбранном плане."
+      "pitfall": "TOP — синтаксис SQL Server, LIMIT — синтаксис SQLite. Без ORDER BY нельзя гарантировать, какие именно первые три строки вернутся. TOP (3) в этом приложении преобразуется в LIMIT 3.",
+      "question": "Куда поставить TOP (3) в SQL Server и LIMIT 3 в SQLite?",
+      "answer": "TOP (3) ставится после SELECT, перед полями. LIMIT 3 — в конце SELECT, после ORDER BY. В тренажёре доступны обе записи."
     },
     {
       "id": 3,

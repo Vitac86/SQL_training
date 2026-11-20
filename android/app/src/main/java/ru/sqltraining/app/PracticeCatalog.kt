@@ -61,3 +61,34 @@ object PracticeCatalog {
         return tasks.sortedBy(PracticeTask::id)
     }
 }
+
+
+/**
+ * Learning order is determined by the prerequisite lesson, not by legacy task ID.
+ * Task IDs must remain stable because user completion data is stored by ID.
+ */
+object PracticePath {
+    fun ordered(tasks: List<PracticeTask>): List<PracticeTask> =
+        tasks.sortedWith(compareBy<PracticeTask> { it.lessonId }.thenBy { it.difficulty }.thenBy { it.id })
+
+    fun forLesson(tasks: List<PracticeTask>, lessonId: Int): List<PracticeTask> =
+        ordered(tasks).filter { it.lessonId == lessonId }
+
+    fun position(tasks: List<PracticeTask>, taskId: Int): Int =
+        ordered(tasks).indexOfFirst { it.id == taskId }
+
+    fun next(tasks: List<PracticeTask>, taskId: Int): PracticeTask? =
+        ordered(tasks).let { path ->
+            val index = path.indexOfFirst { it.id == taskId }
+            if (index in 0 until path.lastIndex) path[index + 1] else null
+        }
+
+    fun previous(tasks: List<PracticeTask>, taskId: Int): PracticeTask? =
+        ordered(tasks).let { path ->
+            val index = path.indexOfFirst { it.id == taskId }
+            if (index > 0) path[index - 1] else null
+        }
+
+    fun nextUnsolved(tasks: List<PracticeTask>, completed: Set<Int>): PracticeTask? =
+        ordered(tasks).firstOrNull { it.id !in completed }
+}

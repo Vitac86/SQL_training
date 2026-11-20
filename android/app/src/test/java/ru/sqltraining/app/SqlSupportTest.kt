@@ -37,6 +37,27 @@ class SqlSupportTest {
         assertTrue(converted.contains("FROM trades"))
     }
 
+    @Test fun supportsTopWithAndWithoutSpaces() {
+        val a = TsqlLiteAdapter.convert(
+            "SELECT TOP(3) trade_id,price FROM trades ORDER BY price DESC,trade_id"
+        )
+        val b = TsqlLiteAdapter.convert(
+            "select\n top (3) trade_id,price FROM dbo.trades ORDER BY price DESC,trade_id"
+        )
+        assertTrue(a.contains("LIMIT 3", ignoreCase = true))
+        assertTrue(b.contains("LIMIT 3", ignoreCase = true))
+        assertFalse(a.contains("TOP(", ignoreCase = true))
+        assertTrue(b.contains("FROM trades", ignoreCase = true))
+    }
+
+    @Test fun supportsDistinctWithTop() {
+        val converted = TsqlLiteAdapter.convert(
+            "SELECT DISTINCT TOP (2) side FROM trades ORDER BY side"
+        )
+        assertTrue(converted.contains("DISTINCT", ignoreCase = true))
+        assertTrue(converted.contains("LIMIT 2", ignoreCase = true))
+    }
+
     @Test fun skipsSqlServerSessionCommands() {
         val prepared = TsqlLiteAdapter.prepare("USE TradingTraining;\nGO\nSELECT 1;")
         assertEquals(listOf("SELECT 1"), SqlScriptParser.split(prepared))

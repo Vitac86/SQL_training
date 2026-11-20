@@ -4,7 +4,7 @@ data class Lesson(val id:Int,val title:String,val level:String,val description:S
 val lessons = listOf(
 Lesson(0,"Знакомство с базой данных","Основы","Таблица — строки и столбцы. SQL позволяет задавать вопросы к данным.","SELECT * FROM instruments;"),
 Lesson(1,"SELECT и столбцы","Основы","SELECT выбирает нужные столбцы, FROM указывает таблицу.","SELECT ticker,currency FROM instruments;"),
-Lesson(2,"Сортировка и ограничение","Основы","ORDER BY сортирует строки. В SQLite для ограничения результата используется LIMIT.","SELECT ticker,name FROM instruments ORDER BY ticker LIMIT 5;"),
+Lesson(2,"Сортировка, DISTINCT и TOP / LIMIT","Основы","ORDER BY задаёт порядок; DISTINCT убирает дубли. В SQL Server количество ограничивает TOP (3) сразу после SELECT, в SQLite — LIMIT 3 в конце.","SELECT TOP (3) trade_id,price FROM trades ORDER BY price DESC,trade_id;"),
 Lesson(3,"WHERE","Основы","WHERE оставляет строки, подходящие под условие.","SELECT * FROM trades WHERE side='BUY';"),
 Lesson(4,"AND, OR, IN, BETWEEN","Основы","Логические условия объединяют проверки. Скобки задают порядок вычисления.","SELECT * FROM trades WHERE side='BUY' AND quantity BETWEEN 10 AND 100;"),
 Lesson(5,"NULL","Основы","NULL означает отсутствие значения. Проверяй его через IS NULL или IS NOT NULL.","SELECT * FROM trades WHERE commission IS NOT NULL;"),
