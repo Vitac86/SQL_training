@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,6 +59,9 @@ ORDER BY ticker;""".trimIndent()
  var selectedLesson by remember{mutableStateOf<Lesson?>(null)}
  var activeTask by remember{mutableStateOf<PracticeTask?>(null)}
  var taskFeedback by remember{mutableStateOf<String?>(null)}
+ val context = LocalContext.current
+ val practiceTasks = remember(context) { PracticeCatalog.load(context) }
+ val lessonGuides = remember(context) { LessonGuides.load(context) }
  val scope= rememberCoroutineScope()
 
  LaunchedEffect(completed){prefs.edit().putStringSet("completed",completed.map{it.toString()}.toSet()).apply()}
@@ -73,7 +77,7 @@ ORDER BY ticker;""".trimIndent()
  MaterialTheme(colorScheme=darkColorScheme(primary=Green,onPrimary=Bg,background=Bg,surface=Panel,onBackground=Color(0xFFEAF0F7),onSurface=Color(0xFFEAF0F7),secondary=Muted,surfaceVariant=Color(0xFF273244))){
   Scaffold(
    containerColor=Bg,
-   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.3",color=Muted,fontSize=10.sp)}},
+   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.4",color=Muted,fontSize=10.sp)}},
     actions={IconButton(enabled=!running,onClick={showResetDialog=true}){Icon(Icons.Default.RestartAlt,"Сбросить учебную БД")}},
     colors=TopAppBarDefaults.topAppBarColors(containerColor=Bg))},
    bottomBar={NavigationBar(containerColor=Panel){listOf("Курс","Практика","SQL","Прогресс").forEachIndexed{i,label->
@@ -82,12 +86,22 @@ ORDER BY ticker;""".trimIndent()
   ){padding->Box(Modifier.fillMaxSize().padding(padding)){
    when(tab){
     0->CourseScreen(completed,onOpen={selectedLesson=it;tab=2},onDone={completed=completed+it.id})
-    1->PracticeScreen(activeTask?.id,completedTasks){task->activeTask=task;taskFeedback=null;sql=task.starter;result=null;error=null;tab=2}
+    1->PracticeScreen(practiceTasks,activeTask?.id,completedTasks){task->activeTask=task;taskFeedback=null;sql=task.starter;result=null;error=null;tab=2}
     2 -> if (selectedLesson != null) {
        LessonScreen(
-         selectedLesson!!,
+         lesson = selectedLesson!!,
+         guide = lessonGuides[selectedLesson!!.id],
+         practiceCount = practiceTasks.count { it.lessonId == selectedLesson!!.id },
          onBack = { selectedLesson = null },
          onTry = { sql = selectedLesson!!.example; selectedLesson = null; activeTask = null },
+         onPractice = {
+           val forLesson = practiceTasks.filter { it.lessonId == selectedLesson!!.id }
+           val next = forLesson.firstOrNull { it.id !in completedTasks } ?: forLesson.firstOrNull()
+           if (next != null) {
+             activeTask = next; sql = next.starter; result = null; error = null
+             taskFeedback = null; selectedLesson = null
+           }
+         },
          onDone = { completed = completed + selectedLesson!!.id; selectedLesson = null }
        )
      } else {
@@ -125,21 +139,33 @@ ORDER BY ticker;""".trimIndent()
              if (chosen != null) {
                running = true; error = null; taskFeedback = null
                try {
-                 val (actual, correct) = db.assess(sql, chosen.expectedSql)
-                 result = actual
-                 taskFeedback = if (correct) "Верно! Результат совпадает с эталоном."
-                     else "Пока не совпадает. Проверь условия, состав столбцов и сортировку."
-                 if (correct) completedTasks = completedTasks + chosen.id
+                 val assessment = db.assess(sql, chosen.expectedSql)
+                 result = assessment.actual
+                 taskFeedback = assessment.feedback
+                 if (assessment.correct) completedTasks = completedTasks + chosen.id
                  history = (listOf(sql) + history.filterNot { it == sql }).take(50)
                } catch (e: Exception) {
                  result = null; error = e.message ?: "Ошибка SQL"
                } finally { running = false }
              }
            }
+         },
+         onNextTask = {
+           val current = activeTask
+           val sameTopic = practiceTasks.filter { it.topic == current?.topic && it.id !in completedTasks }
+           val next = sameTopic.firstOrNull { it.id != current?.id }
+               ?: practiceTasks.firstOrNull { it.id !in completedTasks && it.id != current?.id }
+           if (next != null) {
+             activeTask = next
+             sql = next.starter
+             result = null
+             error = null
+             taskFeedback = null
+           }
          }
        )
      }
-     else->ProgressScreen(completed,completedTasks,history.size,{completed=emptySet();completedTasks=emptySet();history=emptyList()})
+     else->ProgressScreen(completed,completedTasks,practiceTasks,history.size,{completed=emptySet();completedTasks=emptySet();history=emptyList()})
    }
   }}
   if (showResetDialog) {
@@ -189,43 +215,95 @@ fun CourseScreen(done:Set<Int>,onOpen:(Lesson)->Unit,onDone:(Lesson)->Unit){
 }
 
 @Composable
-fun LessonScreen(lesson:Lesson,onBack:()->Unit,onTry:()->Unit,onDone:()->Unit){
- Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(14.dp)){
-  TextButton(onClick=onBack){Text("← К программе")}
-  Text(lesson.title,style=MaterialTheme.typography.headlineSmall)
-  Text(lesson.level.uppercase(),color=Green)
-  Text(lesson.description,style=MaterialTheme.typography.bodyLarge)
-  Text("Пример запроса",style=MaterialTheme.typography.titleMedium)
-  Surface(color=Panel,shape=RoundedCornerShape(12.dp)){Text(lesson.example,Modifier.fillMaxWidth().padding(14.dp),fontFamily=FontFamily.Monospace,fontSize=13.sp)}
-  Button(onClick=onTry,modifier=Modifier.fillMaxWidth()){Icon(Icons.Default.PlayArrow,null);Spacer(Modifier.width(8.dp));Text("Открыть в редакторе")}
-  OutlinedButton(onClick=onDone,modifier=Modifier.fillMaxWidth()){Text("Отметить изученным")}
- }
-}
+fun LessonScreen(
+    lesson: Lesson,
+    guide: LessonGuide?,
+    practiceCount: Int,
+    onBack: () -> Unit,
+    onTry: () -> Unit,
+    onPractice: () -> Unit,
+    onDone: () -> Unit
+) {
+    var showAnswer by remember(lesson.id) { mutableStateOf(false) }
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(13.dp)
+    ) {
+        TextButton(onClick = onBack) { Text("← К программе") }
+        Text(lesson.title, style = MaterialTheme.typography.headlineSmall)
+        Text(lesson.level.uppercase(), color = Green, fontSize = 12.sp)
+        Text(lesson.description, style = MaterialTheme.typography.bodyLarge)
 
-@Composable
-fun PracticeScreen(activeId:Int?,completed:Set<Int>,onOpen:(PracticeTask)->Unit){
- Column(Modifier.fillMaxSize().padding(16.dp)){
-  Text("Практические задания",style=MaterialTheme.typography.headlineSmall)
-  Text("Реши задачу своим запросом и сравни результат с эталоном.",color=Muted)
-  Spacer(Modifier.height(12.dp))
-  LazyColumn(verticalArrangement=Arrangement.spacedBy(9.dp)){items(practiceTasks){task->
-   Card(onClick={onOpen(task)},colors=CardDefaults.cardColors(containerColor=Panel),shape=RoundedCornerShape(14.dp)){
-    Row(Modifier.fillMaxWidth().padding(15.dp),verticalAlignment=Alignment.CenterVertically){
-     Column(Modifier.weight(1f)){Text(task.title,style=MaterialTheme.typography.titleSmall);Text(task.description,color=Muted,fontSize=12.sp);if(task.id==activeId)Text("Открыто в редакторе",color=Green,fontSize=11.sp);if(task.id in completed)Text("Решено",color=Green,fontSize=11.sp)}
-     if(task.id in completed)Icon(Icons.Default.CheckCircle,null,tint=Green)else Icon(Icons.Default.ChevronRight,null,tint=Green)
+        if (guide != null) {
+            Text("Что это означает", style = MaterialTheme.typography.titleMedium)
+            Text(guide.what)
+            Text("Зачем это нужно", style = MaterialTheme.typography.titleMedium)
+            Text(guide.why)
+            Text("Разберём по шагам", style = MaterialTheme.typography.titleMedium)
+            guide.steps.forEachIndexed { index, step ->
+                Text("${index + 1}. $step", style = MaterialTheme.typography.bodyMedium)
+            }
+            Surface(color = Color(0xFF293242), shape = RoundedCornerShape(12.dp)) {
+                Column(Modifier.padding(12.dp)) {
+                    Text("На что обратить внимание", color = Color(0xFFFFD28A), fontSize = 12.sp)
+                    Spacer(Modifier.height(4.dp))
+                    Text(guide.pitfall, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+
+        Text("Пример запроса", style = MaterialTheme.typography.titleMedium)
+        Surface(color = Panel, shape = RoundedCornerShape(12.dp)) {
+            Text(
+                lesson.example,
+                Modifier.fillMaxWidth().padding(14.dp),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp
+            )
+        }
+        if (guide != null) {
+            Text("Проверь понимание", style = MaterialTheme.typography.titleMedium)
+            Text(guide.question)
+            OutlinedButton(onClick = { showAnswer = !showAnswer }) {
+                Text(if (showAnswer) "Скрыть объяснение" else "Показать объяснение")
+            }
+            if (showAnswer) Text(guide.answer, color = Green)
+        }
+
+        Button(onClick = onTry, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.PlayArrow, null)
+            Spacer(Modifier.width(8.dp))
+            Text("Попробовать запрос")
+        }
+        if (practiceCount > 0) {
+            OutlinedButton(onClick = onPractice, modifier = Modifier.fillMaxWidth()) {
+                Text("Тренировка по теме ($practiceCount задач)")
+            }
+        }
+        OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+            Text("Отметить тему изученной")
+        }
+        Spacer(Modifier.height(8.dp))
     }
-   }
-  }}
- }
 }
 
 @Composable
-fun ProgressScreen(done:Set<Int>,taskDone:Set<Int>,historyCount:Int,onReset:()->Unit){
- Column(Modifier.fillMaxSize().padding(18.dp),verticalArrangement=Arrangement.spacedBy(14.dp)){
+fun ProgressScreen(done:Set<Int>,taskDone:Set<Int>,tasks:List<PracticeTask>,historyCount:Int,onReset:()->Unit){
+ Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),verticalArrangement=Arrangement.spacedBy(14.dp)){
   Text("Мой прогресс",style=MaterialTheme.typography.headlineSmall)
   Card(colors=CardDefaults.cardColors(containerColor=Panel)){Column(Modifier.padding(18.dp)){Text("${done.size} / ${lessons.size}",style=MaterialTheme.typography.headlineLarge,color=Green);Text("изученных тем");LinearProgressIndicator(progress={done.size.toFloat()/lessons.size},modifier=Modifier.fillMaxWidth().padding(top=12.dp),color=Green)}}
-  Card(colors=CardDefaults.cardColors(containerColor=Panel)){Column(Modifier.padding(18.dp)){Text("${taskDone.size} / ${practiceTasks.size}",style=MaterialTheme.typography.headlineMedium,color=Green);Text("решённых практических задач")}}
+  Card(colors=CardDefaults.cardColors(containerColor=Panel)){Column(Modifier.padding(18.dp)){Text("${taskDone.size} / ${tasks.size}",style=MaterialTheme.typography.headlineMedium,color=Green);Text("решённых практических задач")}}
   Card(colors=CardDefaults.cardColors(containerColor=Panel)){Column(Modifier.padding(18.dp)){Text("$historyCount",style=MaterialTheme.typography.headlineMedium);Text("сохранённых запросов в истории")}}
+  Text("Прогресс по темам",style=MaterialTheme.typography.titleMedium)
+  tasks.groupBy { it.topic }.forEach { (topic,section) ->
+    val count = section.count { it.id in taskDone }
+    Text("$topic · $count / ${section.size}",fontSize=12.sp,color=Muted)
+    LinearProgressIndicator(
+      progress={ if(section.isEmpty()) 0f else count.toFloat()/section.size },
+      modifier=Modifier.fillMaxWidth(),
+      color=Green
+    )
+  }
   Text("Прогресс и история сохраняются на устройстве и доступны после перезапуска приложения.",color=Muted)
   OutlinedButton(onClick=onReset){Text("Сбросить статистику")}
  }

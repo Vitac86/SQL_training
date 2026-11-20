@@ -17,6 +17,12 @@ data class QueryResult(
 
 data class DatabaseObject(val name: String, val columns: List<String>)
 
+data class AssessmentResult(
+    val actual: QueryResult,
+    val correct: Boolean,
+    val feedback: String
+)
+
 class SqlDatabase(context: Context) : SQLiteOpenHelper(context, "sql_trainer.db", null, 1) {
     private val app = context.applicationContext
 
@@ -26,6 +32,15 @@ class SqlDatabase(context: Context) : SQLiteOpenHelper(context, "sql_trainer.db"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
+        createFixture(db)
+    }
+
+    /**
+     * All assessments start from the original synthetic dataset, not from the
+     * mutable Playground tables. This also keeps a deleted/edited user table
+     * from permanently breaking the training course.
+     */
+    private fun createFixture(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE instruments(instrument_id INTEGER PRIMARY KEY,ticker TEXT NOT NULL UNIQUE,name TEXT NOT NULL,asset_class TEXT NOT NULL,currency TEXT NOT NULL)")
         db.execSQL("CREATE TABLE accounts(account_id INTEGER PRIMARY KEY,account_name TEXT NOT NULL UNIQUE,strategy TEXT NOT NULL,risk_limit_rub NUMERIC NOT NULL CHECK(risk_limit_rub>0))")
         db.execSQL("CREATE TABLE trades(trade_id INTEGER PRIMARY KEY,trade_date TEXT NOT NULL,account_id INTEGER NOT NULL REFERENCES accounts(account_id),instrument_id INTEGER NOT NULL REFERENCES instruments(instrument_id),side TEXT NOT NULL CHECK(side IN ('BUY','SELL')),quantity INTEGER NOT NULL CHECK(quantity>0),price NUMERIC NOT NULL CHECK(price>0),commission NUMERIC NOT NULL CHECK(commission>=0))")
@@ -120,24 +135,35 @@ class SqlDatabase(context: Context) : SQLiteOpenHelper(context, "sql_trainer.db"
     }
 
     /**
-     * Compare learner and reference queries against the same database using
-     * a dedicated read-only connection. Assessment must never mutate tables.
+     * Execute learner and reference queries against a new, disposable SQLite
+     * database. PRAGMA query_only blocks data changes, including WITH ... DML.
      */
-    suspend fun assess(userSql: String, expectedSql: String): Pair<QueryResult, Boolean> =
+    suspend fun assess(userSql: String, expectedSql: String): AssessmentResult =
         withContext(Dispatchers.IO) {
-            val dbPath = readableDatabase.path
-            val readOnly = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+            val fixture = SQLiteDatabase.create(null)
             try {
-                val actual = readOnlyQuery(readOnly, userSql)
-                val expected = readOnlyQuery(readOnly, expectedSql)
-                actual to (
-                    actual.columns.map(String::lowercase) == expected.columns.map(String::lowercase) &&
-                    actual.rows == expected.rows
-                )
+                fixture.setForeignKeyConstraintsEnabled(true)
+                createFixture(fixture)
+                fixture.execSQL("PRAGMA query_only=ON")
+                val actual = readOnlyQuery(fixture, userSql)
+                val expected = readOnlyQuery(fixture, expectedSql)
+                val columnsMatch = actual.columns.map(String::lowercase) ==
+                    expected.columns.map(String::lowercase)
+                val rowsMatch = actual.rows == expected.rows
+                val feedback = when {
+                    !columnsMatch ->
+                        "Отличается состав или название столбцов. Ожидается: ${expected.columns.joinToString(", ")}. Получено: ${actual.columns.joinToString(", ")}."
+                    actual.rows.size != expected.rows.size ->
+                        "Количество строк не совпало: твой запрос вернул ${actual.rows.size}, эталон — ${expected.rows.size}. Проверь WHERE, JOIN, GROUP BY и LIMIT."
+                    !rowsMatch ->
+                        "Строк столько же, но значения или порядок отличаются. Проверь фильтр, вычисления, JOIN и ORDER BY."
+                    else -> "Верно! Результат совпадает с эталоном."
+                }
+                AssessmentResult(actual, columnsMatch && rowsMatch, feedback)
             } catch (error: Exception) {
                 throw IllegalArgumentException(SqlErrors.explain(error.message ?: "Ошибка проверки"))
             } finally {
-                readOnly.close()
+                fixture.close()
             }
         }
 
@@ -151,7 +177,10 @@ class SqlDatabase(context: Context) : SQLiteOpenHelper(context, "sql_trainer.db"
         }
         return db.rawQuery(sql, null).use { cursor ->
             val columns = (0 until cursor.columnCount).map(cursor::getColumnName)
-            val rows = readRows(cursor, 500)
+            val rows = readRows(cursor, 501)
+            require(rows.size <= 500) {
+                "Для проверки выводи не более 500 строк. Добавь подходящий фильтр или агрегат."
+            }
             QueryResult(columns, rows, "Получено строк: ${rows.size}", (System.nanoTime() - started) / 1_000_000)
         }
     }

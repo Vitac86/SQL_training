@@ -1,8 +1,6 @@
 package ru.sqltraining.app
 
 data class Lesson(val id:Int,val title:String,val level:String,val description:String,val example:String)
-data class PracticeTask(val id:Int,val title:String,val description:String,val starter:String,val expectedSql:String,val hint:String)
-
 val lessons = listOf(
 Lesson(0,"Знакомство с базой данных","Основы","Таблица — строки и столбцы. SQL позволяет задавать вопросы к данным.","SELECT * FROM instruments;"),
 Lesson(1,"SELECT и столбцы","Основы","SELECT выбирает нужные столбцы, FROM указывает таблицу.","SELECT ticker,currency FROM instruments;"),
@@ -38,14 +36,5 @@ Lesson(30,"Комиссионная нагрузка","Брокерская ан
 Lesson(31,"Дневная активность счетов","Брокерская аналитика","Сгруппируй поручения по дате и счёту, чтобы увидеть динамику торговой активности.","SELECT trade_date,account_id,COUNT(*) AS trades_count,SUM(quantity*price) AS turnover_rub FROM trades GROUP BY trade_date,account_id ORDER BY trade_date,account_id;")
 )
 
-val practiceTasks = listOf(
-PracticeTask(1,"Покупки клиентов","Выведи все сделки на покупку. Покажи все поля и отсортируй по ID сделки.","SELECT * FROM trades WHERE side='BUY';","SELECT * FROM trades WHERE side='BUY' ORDER BY trade_id;","Используй WHERE для side и ORDER BY для trade_id."),
-PracticeTask(2,"Активность счетов","Посчитай количество сделок по каждому счёту. Отсортируй по account_id.","SELECT account_id,COUNT(*) AS trades_count FROM trades GROUP BY account_id;","SELECT account_id,COUNT(*) AS trades_count FROM trades GROUP BY account_id ORDER BY account_id;","Нужны GROUP BY и COUNT(*)."),
-PracticeTask(3,"Самые дорогие сделки","Покажи три сделки с максимальной ценой. Выведи trade_id и price.","SELECT trade_id,price FROM trades ORDER BY price DESC;","SELECT trade_id,price FROM trades ORDER BY price DESC,trade_id LIMIT 3;","Сортировка по убыванию и ограничение LIMIT 3."),
-PracticeTask(4,"Комиссия по счетам","Рассчитай общую комиссию по каждому счёту. Покажи account_id и total_fee.","SELECT account_id,SUM(commission) AS total_fee FROM trades GROUP BY account_id;","SELECT account_id,SUM(commission) AS total_fee FROM trades GROUP BY account_id ORDER BY account_id;","Используй SUM и GROUP BY."),
-PracticeTask(5,"Сделки с названием счёта","Выведи первые 10 сделок вместе с названием счёта. Покажи ID сделки и account_name.","SELECT t.trade_id,a.account_name FROM trades t JOIN accounts a ON a.account_id=t.account_id;","SELECT t.trade_id,a.account_name FROM trades t INNER JOIN accounts a ON a.account_id=t.account_id ORDER BY t.trade_id LIMIT 10;","Соедини trades и accounts по account_id."),
-PracticeTask(6,"Оборот по тикерам","Рассчитай сумму quantity × price для каждого инструмента. Выведи ticker и turnover_rub, сортировка по тикеру.","SELECT i.ticker,SUM(t.quantity*t.price) AS turnover_rub FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id;","SELECT i.ticker,SUM(t.quantity*t.price) AS turnover_rub FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id GROUP BY i.ticker ORDER BY i.ticker;","Соедини сделки со справочником и сгруппируй по тикеру."),
-PracticeTask(7,"Средний спред","Рассчитай средний bid_ask_spread_bps по каждому тикеру. Выведи ticker и avg_spread_bps, сортировка по тикеру.","SELECT i.ticker,AVG(l.bid_ask_spread_bps) AS avg_spread_bps FROM liquidity l JOIN instruments i ON i.instrument_id=l.instrument_id GROUP BY i.ticker;","SELECT i.ticker,ROUND(AVG(l.bid_ask_spread_bps),2) AS avg_spread_bps FROM liquidity l JOIN instruments i ON i.instrument_id=l.instrument_id GROUP BY i.ticker ORDER BY i.ticker;","Используй AVG, GROUP BY и ROUND."),
-PracticeTask(8,"Предыдущая цена закрытия","Для каждой записи daily_prices выведи instrument_id, price_date, close_price и предыдущую цену prev_close. Отсортируй по инструменту и дате.","SELECT instrument_id,price_date,close_price,LAG(close_price) OVER(PARTITION BY instrument_id ORDER BY price_date) AS prev_close FROM daily_prices;","SELECT instrument_id,price_date,close_price,LAG(close_price) OVER(PARTITION BY instrument_id ORDER BY price_date) AS prev_close FROM daily_prices ORDER BY instrument_id,price_date;","Используй LAG с PARTITION BY и ORDER BY внутри окна."),
-PracticeTask(9,"Комиссии и оборот счетов","По каждому account_id рассчитай fees, turnover и fee_bps. Комиссионная нагрузка считается в базисных пунктах.","SELECT account_id,SUM(commission) AS fees,SUM(quantity*price) AS turnover,ROUND(10000.0*SUM(commission)/NULLIF(SUM(quantity*price),0),2) AS fee_bps FROM trades GROUP BY account_id;","SELECT account_id,SUM(commission) AS fees,SUM(quantity*price) AS turnover,ROUND(10000.0*SUM(commission)/NULLIF(SUM(quantity*price),0),2) AS fee_bps FROM trades GROUP BY account_id ORDER BY account_id;","Собери три агрегата по account_id. Для деления используй NULLIF.")
-)
+
+// Practice tasks are stored in assets/practice_tasks.json, loaded by PracticeCatalog.

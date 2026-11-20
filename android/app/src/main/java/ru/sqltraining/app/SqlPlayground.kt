@@ -61,14 +61,16 @@ fun EditorScreen(
     onDeleteSaved: (String) -> Unit,
     onHistory: (String) -> Unit,
     onRun: () -> Unit,
-    onCheck: () -> Unit
+    onCheck: () -> Unit,
+    onNextTask: () -> Unit
 ) {
     var showSave by remember { mutableStateOf(false) }
     var showSaved by remember { mutableStateOf(false) }
     var showHistory by remember { mutableStateOf(false) }
     var showSchema by remember { mutableStateOf(false) }
     var saveName by remember { mutableStateOf("") }
-    var showHint by remember(task?.id) { mutableStateOf(false) }
+    var hintStep by remember(task?.id) { mutableIntStateOf(0) }
+    var showSolution by remember(task?.id) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
 
     Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 7.dp)) {
@@ -91,13 +93,36 @@ fun EditorScreen(
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                    Text("ЗАДАНИЕ ${task.id} · ${task.title}", color = accent, fontSize = 11.sp)
+                Column(
+                    Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        "ЗАДАНИЕ #${task.id} · ${task.topic} · ${task.difficultyName}",
+                        color = accent,
+                        fontSize = 11.sp
+                    )
+                    Text(task.title, style = MaterialTheme.typography.titleSmall)
                     Text(task.description, fontSize = 12.sp)
-                    TextButton(onClick = { showHint = !showHint }, contentPadding = PaddingValues(0.dp)) {
-                        Text(if (showHint) "Скрыть подсказку" else "Показать подсказку", fontSize = 11.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(
+                            onClick = { if (hintStep < task.hints.size) hintStep++ },
+                            enabled = hintStep < task.hints.size,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("Подсказка $hintStep/3", fontSize = 11.sp)
+                        }
+                        if (hintStep >= task.hints.size) {
+                            TextButton(
+                                onClick = { showSolution = true },
+                                contentPadding = PaddingValues(0.dp)
+                            ) { Text("Показать решение", fontSize = 11.sp) }
+                        }
                     }
-                    if (showHint) Text(task.hint, color = muted, fontSize = 11.sp)
+                    task.hints.take(hintStep).forEachIndexed { index, hint ->
+                        Text("${index + 1}. $hint", color = muted, fontSize = 11.sp)
+                    }
                 }
             }
         }
@@ -130,6 +155,10 @@ fun EditorScreen(
             fontSize = 12.sp,
             modifier = Modifier.padding(vertical = 5.dp)
         )
+        if (feedback != null && feedback.startsWith("Верно") && task != null) {
+            Text(task.explanation, fontSize = 12.sp, color = muted)
+            TextButton(onClick = onNextTask) { Text("Следующая задача по теме") }
+        }
 
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Результат", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -157,6 +186,23 @@ fun EditorScreen(
                 ResultGrid(result, modifier = Modifier.fillMaxWidth().weight(0.48f))
             }
         }
+    }
+
+    if (showSolution && task != null) {
+        AlertDialog(
+            onDismissRequest = { showSolution = false },
+            title = { Text("Решение: ${task.title}") },
+            text = {
+                Column(Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState())) {
+                    Text(task.expectedSql, fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = accent)
+                    Spacer(Modifier.height(12.dp))
+                    Text(task.explanation, fontSize = 13.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Просмотр решения сам по себе не отмечает задание выполненным.", fontSize = 11.sp, color = muted)
+                }
+            },
+            confirmButton = { TextButton(onClick = { showSolution = false }) { Text("Закрыть") } }
+        )
     }
 
     if (showSave) {

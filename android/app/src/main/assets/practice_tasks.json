@@ -1,0 +1,2983 @@
+{
+  "version": 1,
+  "engine": "SQLite",
+  "source": "SQL_training 5-table synthetic seed",
+  "tasks": [
+    {
+      "id": 1,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 0,
+      "title": "Покупки клиентов",
+      "description": "Верни все столбцы сделок BUY, отсортируй по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT * FROM trades WHERE side='BUY' ORDER BY trade_id;",
+      "hints": [
+        "Отфильтруй side и добавь ORDER BY trade_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Фильтрация WHERE оставляет покупки. Явная сортировка позволяет получить воспроизводимый порядок."
+    },
+    {
+      "id": 2,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Активность счетов",
+      "description": "Для каждого account_id выведи account_id и trades_count — количество сделок по возрастанию account_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,COUNT(*) AS trades_count FROM trades GROUP BY account_id ORDER BY account_id;",
+      "hints": [
+        "GROUP BY собирает сделки по идентификатору счёта.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "COUNT(*) считает строки внутри каждой группы; сортировка идёт после группировки."
+    },
+    {
+      "id": 3,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 2,
+      "title": "Самые дорогие сделки",
+      "description": "Выведи trade_id и price для трёх сделок с максимальной ценой. При равной цене выше должна стоять сделка с меньшим ID.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,price FROM trades ORDER BY price DESC,trade_id LIMIT 3;",
+      "hints": [
+        "Сначала сортируй цену по убыванию, затем используй LIMIT.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "ORDER BY price DESC,trade_id делает отбор TOP-3 детерминированным."
+    },
+    {
+      "id": 4,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Комиссия по счетам",
+      "description": "Выведи account_id и total_fee — сумму комиссии каждого счёта, отсортированную по account_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,SUM(commission) AS total_fee FROM trades GROUP BY account_id ORDER BY account_id;",
+      "hints": [
+        "Используй SUM(commission) и GROUP BY account_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Агрегат SUM складывает комиссию по каждой группе счёта."
+    },
+    {
+      "id": 5,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 12,
+      "title": "Сделки с названием счёта",
+      "description": "Выведи trade_id и account_name для первых десяти сделок по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,a.account_name FROM trades t INNER JOIN accounts a ON a.account_id=t.account_id ORDER BY t.trade_id LIMIT 10;",
+      "hints": [
+        "Соедини trades с accounts по account_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "INNER JOIN добавляет название счёта через внешний ключ; ORDER BY делает первые 10 определёнными."
+    },
+    {
+      "id": 6,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 25,
+      "title": "Условная стоимость по тикерам",
+      "description": "Для каждого ticker вычисли turnover_rub = SUM(quantity*price), отсортируй по тикеру. Здесь это учебная величина, не универсальный рублёвый оборот.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,SUM(t.quantity*t.price) AS turnover_rub FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id GROUP BY i.ticker ORDER BY i.ticker;",
+      "hints": [
+        "Сначала присоедини тикер, затем сгруппируй сделки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Математически считаем произведения. Для реального оборота необходимы конвенции котирования, единицы и валюты; этот показатель учебный."
+    },
+    {
+      "id": 7,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 29,
+      "title": "Средний спред",
+      "description": "По каждому тикеру выведи ticker и avg_spread_bps — средний спред, округлённый до 2 знаков, с сортировкой по тикеру.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,ROUND(AVG(l.bid_ask_spread_bps),2) AS avg_spread_bps FROM liquidity l JOIN instruments i ON i.instrument_id=l.instrument_id GROUP BY i.ticker ORDER BY i.ticker;",
+      "hints": [
+        "Присоедини instruments к liquidity; AVG и ROUND.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: liquidity, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "AVG вычисляет средний спред в базисных пунктах для каждого инструмента."
+    },
+    {
+      "id": 8,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 28,
+      "title": "Предыдущая цена закрытия",
+      "description": "Для каждой дневной цены выведи instrument_id, price_date, close_price и prev_close (предыдущее наблюдение этого инструмента). Сортировка по инструменту и дате.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,price_date,close_price,LAG(close_price) OVER(PARTITION BY instrument_id ORDER BY price_date) AS prev_close FROM daily_prices ORDER BY instrument_id,price_date;",
+      "hints": [
+        "Используй LAG с PARTITION BY instrument_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, OVER.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "LAG берёт предыдущее наблюдение внутри инструмента. Для первой даты результат NULL."
+    },
+    {
+      "id": 9,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 30,
+      "title": "Комиссии и условный оборот",
+      "description": "По account_id рассчитай fees, turnover = SUM(quantity*price) и fee_bps = ROUND(10000*fees/turnover,2). Отсортируй по account_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,SUM(commission) AS fees,SUM(quantity*price) AS turnover,ROUND(10000.0*SUM(commission)/NULLIF(SUM(quantity*price),0),2) AS fee_bps FROM trades GROUP BY account_id ORDER BY account_id;",
+      "hints": [
+        "Комиссия и условная стоимость считаются через SUM; деление защити NULLIF.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Отношение комиссии к условной сумме произведений масштабируется на 10 000. Не смешивай это с экономически корректным комиссионным bps для разных инструментов."
+    },
+    {
+      "id": 10,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 0,
+      "title": "Список инструментов",
+      "description": "Покажи instrument_id, ticker, name из instruments по возрастанию instrument_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,ticker,name FROM instruments ORDER BY instrument_id;",
+      "hints": [
+        "Выбирай только нужные поля.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 11,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 0,
+      "title": "Все счета",
+      "description": "Выведи account_id, account_name, strategy, отсортируй по account_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,account_name,strategy FROM accounts ORDER BY account_id;",
+      "hints": [
+        "Источник — accounts.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 12,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 1,
+      "title": "Валюты инструментов",
+      "description": "Выведи ticker и currency в алфавитном порядке тикеров.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker,currency FROM instruments ORDER BY ticker;",
+      "hints": [
+        "Не используй SELECT *.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 13,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 1,
+      "title": "Коды сделок",
+      "description": "Покажи trade_id, trade_date и side первых 12 сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,trade_date,side FROM trades ORDER BY trade_id LIMIT 12;",
+      "hints": [
+        "LIMIT работает после сортировки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 14,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 1,
+      "title": "Первая пятёрка счетов",
+      "description": "Выведи account_name и risk_limit_rub первых пяти счетов по account_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_name,risk_limit_rub FROM accounts ORDER BY account_id LIMIT 5;",
+      "hints": [
+        "Укажи источник accounts и сортировку по ID.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 15,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 2,
+      "title": "Пять новых сделок",
+      "description": "Покажи trade_id, trade_date, price пяти последних сделок по убыванию trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,trade_date,price FROM trades ORDER BY trade_id DESC LIMIT 5;",
+      "hints": [
+        "DESC сортирует по убыванию.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 16,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 2,
+      "title": "Первые котировки",
+      "description": "Покажи price_date, instrument_id, close_price первых 15 дневных цен по дате и инструменту.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,instrument_id,close_price FROM daily_prices ORDER BY price_date,instrument_id LIMIT 15;",
+      "hints": [
+        "Для устойчивого порядка используй два столбца.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 17,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 2,
+      "title": "Последние данные ликвидности",
+      "description": "Выведи price_date, instrument_id, turnover_rub для 10 строк с самой поздней датой и меньшим instrument_id при равенстве даты.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,instrument_id,turnover_rub FROM liquidity ORDER BY price_date DESC,instrument_id LIMIT 10;",
+      "hints": [
+        "Сортируй сначала по дате DESC.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 18,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 1,
+      "title": "Классы активов",
+      "description": "Выведи уникальные asset_class по алфавиту.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT DISTINCT asset_class FROM instruments ORDER BY asset_class;",
+      "hints": [
+        "DISTINCT убирает повторения.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 19,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 1,
+      "title": "Торговые стороны",
+      "description": "Выведи уникальные значения side в алфавитном порядке.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT DISTINCT side FROM trades ORDER BY side;",
+      "hints": [
+        "DISTINCT используется без GROUP BY.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 20,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 1,
+      "title": "Даты торгов",
+      "description": "Выведи уникальные trade_date от ранней к поздней.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT DISTINCT trade_date FROM trades ORDER BY trade_date;",
+      "hints": [
+        "Нужно убрать повторные даты.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 21,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 1,
+      "title": "Коды стратегии",
+      "description": "Покажи уникальные strategy по возрастанию.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT DISTINCT strategy FROM accounts ORDER BY strategy;",
+      "hints": [
+        "Возьми поле из accounts.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 22,
+      "topic": "Основы и SELECT",
+      "difficulty": 2,
+      "lessonId": 1,
+      "title": "Условная сумма сделки",
+      "description": "Для первых 10 сделок по ID покажи trade_id, quantity, price и example_value = quantity * price.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,quantity,price,quantity*price AS example_value FROM trades ORDER BY trade_id LIMIT 10;",
+      "hints": [
+        "Создай вычисляемый столбец через AS.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Выражение формирует новый столбец результата, но не сохраняет значение в таблицу."
+    },
+    {
+      "id": 23,
+      "topic": "Основы и SELECT",
+      "difficulty": 2,
+      "lessonId": 1,
+      "title": "Комиссия с округлением",
+      "description": "Выведи первые 12 trade_id и commission_rounded = ROUND(commission,0), сортировка по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,ROUND(commission,0) AS commission_rounded FROM trades ORDER BY trade_id LIMIT 12;",
+      "hints": [
+        "Округлить поможет ROUND.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 24,
+      "topic": "Основы и SELECT",
+      "difficulty": 1,
+      "lessonId": 2,
+      "title": "Самые большие лимиты",
+      "description": "Покажи account_name и risk_limit_rub трёх крупнейших риск-лимитов, по убыванию лимита и по имени при равенстве.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_name,risk_limit_rub FROM accounts ORDER BY risk_limit_rub DESC,account_name LIMIT 3;",
+      "hints": [
+        "Используй ORDER BY ... DESC и LIMIT.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 25,
+      "topic": "Основы и SELECT",
+      "difficulty": 2,
+      "lessonId": 1,
+      "title": "Количество и цена",
+      "description": "Для десяти сделок с наименьшим trade_id верни trade_id, quantity, price, сортировка по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,quantity,price FROM trades ORDER BY trade_id LIMIT 10;",
+      "hints": [
+        "Ограничение количества после сортировки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "SELECT определяет выводимые поля, FROM — исходную таблицу, ORDER BY — порядок. LIMIT ограничивает число строк."
+    },
+    {
+      "id": 26,
+      "topic": "WHERE и логика",
+      "difficulty": 1,
+      "lessonId": 3,
+      "title": "Только продажи",
+      "description": "Верни trade_id, side, price всех SELL, сортировка по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,side,price FROM trades WHERE side='SELL' ORDER BY trade_id;",
+      "hints": [
+        "Проверь side='SELL'.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 27,
+      "topic": "WHERE и логика",
+      "difficulty": 1,
+      "lessonId": 3,
+      "title": "Инструменты акции",
+      "description": "Верни ticker и name только класса equity, сортировка по тикеру.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker,name FROM instruments WHERE asset_class='equity' ORDER BY ticker;",
+      "hints": [
+        "Фильтруй asset_class.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 28,
+      "topic": "WHERE и логика",
+      "difficulty": 1,
+      "lessonId": 3,
+      "title": "Рублёвые инструменты",
+      "description": "Верни ticker и currency для инструментов с currency='RUB', сортировка по ticker.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker,currency FROM instruments WHERE currency='RUB' ORDER BY ticker;",
+      "hints": [
+        "WHERE проверяет валюту.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 29,
+      "topic": "WHERE и логика",
+      "difficulty": 1,
+      "lessonId": 4,
+      "title": "Сделки на 100 и более",
+      "description": "Покажи trade_id и quantity для количества >=100, сортировка по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,quantity FROM trades WHERE quantity>=100 ORDER BY trade_id;",
+      "hints": [
+        "Используй сравнение >=.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 30,
+      "topic": "WHERE и логика",
+      "difficulty": 1,
+      "lessonId": 4,
+      "title": "Комиссия больше 100",
+      "description": "Покажи trade_id и commission где комиссия строго больше 100, сортировка по ID.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,commission FROM trades WHERE commission>100 ORDER BY trade_id;",
+      "hints": [
+        "Условие commission>100.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 31,
+      "topic": "WHERE и логика",
+      "difficulty": 1,
+      "lessonId": 4,
+      "title": "Покупки на счёте 1",
+      "description": "Выведи trade_id, account_id, side для BUY счёта 1.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,account_id,side FROM trades WHERE account_id=1 AND side='BUY' ORDER BY trade_id;",
+      "hints": [
+        "Используй AND.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 32,
+      "topic": "WHERE и логика",
+      "difficulty": 1,
+      "lessonId": 4,
+      "title": "Два счёта",
+      "description": "Верни trade_id и account_id для счетов 1 или 3, сортировка по ID сделки.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,account_id FROM trades WHERE account_id IN (1,3) ORDER BY trade_id;",
+      "hints": [
+        "IN принимает список значений.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 33,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Цена в диапазоне",
+      "description": "Покажи trade_id и price для price от 100 до 300 включительно, по возрастанию цены, затем ID.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,price FROM trades WHERE price BETWEEN 100 AND 300 ORDER BY price,trade_id;",
+      "hints": [
+        "BETWEEN включает обе границы.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 34,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Покупки без мелких объёмов",
+      "description": "Выведи trade_id, quantity, side для BUY с quantity >=500.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,quantity,side FROM trades WHERE side='BUY' AND quantity>=500 ORDER BY trade_id;",
+      "hints": [
+        "Два условия через AND.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 35,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Малые продажи",
+      "description": "Верни trade_id, side, quantity для SELL с quantity меньше 100.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,side,quantity FROM trades WHERE side='SELL' AND quantity<100 ORDER BY trade_id;",
+      "hints": [
+        "Условие по стороне и размеру сделки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 36,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Фондовые и валютные инструменты",
+      "description": "Верни ticker и asset_class для equity или fx, сортировка по тикеру.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker,asset_class FROM instruments WHERE asset_class IN ('equity','fx') ORDER BY ticker;",
+      "hints": [
+        "Перечисли два класса в IN.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 37,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Исключить счета",
+      "description": "Верни trade_id, account_id для сделок не на счётах 1 и 2.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,account_id FROM trades WHERE account_id NOT IN (1,2) ORDER BY trade_id;",
+      "hints": [
+        "NOT IN исключает значения.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 38,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 3,
+      "title": "Последний день",
+      "description": "Покажи trade_id и trade_date для 2024-03-01, сортировка по ID.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,trade_date FROM trades WHERE trade_date='2024-03-01' ORDER BY trade_id;",
+      "hints": [
+        "Сравни дату как строку формата YYYY-MM-DD.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 39,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Цена и комиссия",
+      "description": "Выведи trade_id, price, commission для price>1000 и commission>10.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,price,commission FROM trades WHERE price>1000 AND commission>10 ORDER BY trade_id;",
+      "hints": [
+        "Оба условия должны быть истинными.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 40,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Альтернативный фильтр",
+      "description": "Верни trade_id, side, quantity для BUY или quantity>5000.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,side,quantity FROM trades WHERE side='BUY' OR quantity>5000 ORDER BY trade_id;",
+      "hints": [
+        "OR разрешает выполнить лишь одно условие.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 41,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Комбинация со скобками",
+      "description": "Выведи trade_id, account_id, side, price для счетов 1 или 2, где при этом цена больше 1000.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,account_id,side,price FROM trades WHERE account_id IN (1,2) AND price>1000 ORDER BY trade_id;",
+      "hints": [
+        "Сначала ограничь список счетов, затем цену.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 42,
+      "topic": "WHERE и логика",
+      "difficulty": 1,
+      "lessonId": 3,
+      "title": "Тикеры на G",
+      "description": "Выведи ticker инструментов, начинающихся на G, по алфавиту.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker FROM instruments WHERE ticker LIKE 'G%' ORDER BY ticker;",
+      "hints": [
+        "LIKE 'G%' ищет начало.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 43,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 3,
+      "title": "Тикер с RUB",
+      "description": "Покажи ticker инструментов, у которых название тикера содержит RUB.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker FROM instruments WHERE ticker LIKE '%RUB%' ORDER BY ticker;",
+      "hints": [
+        "В шаблоне знак % означает любое число символов.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 44,
+      "topic": "WHERE и логика",
+      "difficulty": 2,
+      "lessonId": 4,
+      "title": "Неактивный счёт",
+      "description": "Верни account_id и account_name для strategy='none'.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,account_name FROM accounts WHERE strategy='none' ORDER BY account_id;",
+      "hints": [
+        "Фильтруй текстовую стратегию.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 45,
+      "topic": "WHERE и логика",
+      "difficulty": 3,
+      "lessonId": 4,
+      "title": "Приоритет AND и OR",
+      "description": "Покажи trade_id, side, price для покупок дороже 500 ИЛИ продаж дороже 1000. Сортировка по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,side,price FROM trades WHERE (side='BUY' AND price>500) OR (side='SELL' AND price>1000) ORDER BY trade_id;",
+      "hints": [
+        "Каждую ветку с AND заключи в скобки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WHERE отбирает строки до группировки. AND требует выполнения обоих условий, OR — хотя бы одного; IN проверяет принадлежность списку."
+    },
+    {
+      "id": 46,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 1,
+      "lessonId": 16,
+      "title": "Перевод BUY и SELL",
+      "description": "Для первых 15 сделок покажи trade_id и side_ru: BUY → Покупка, SELL → Продажа.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,CASE WHEN side='BUY' THEN 'Покупка' ELSE 'Продажа' END AS side_ru FROM trades ORDER BY trade_id LIMIT 15;",
+      "hints": [
+        "Используй CASE WHEN THEN ELSE END.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 47,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Класс риска по лимиту",
+      "description": "По всем счетам покажи account_name и risk_class: лимит >=4000000 означает HIGH, иначе LOW.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_name,CASE WHEN risk_limit_rub>=4000000 THEN 'HIGH' ELSE 'LOW' END AS risk_class FROM accounts ORDER BY account_name;",
+      "hints": [
+        "CASE работает по значению risk_limit_rub.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 48,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Крупная или небольшая сделка",
+      "description": "Первые 20 сделок: trade_id, size_class — BIG при quantity>=1000, иначе SMALL.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,CASE WHEN quantity>=1000 THEN 'BIG' ELSE 'SMALL' END AS size_class FROM trades ORDER BY trade_id LIMIT 20;",
+      "hints": [
+        "Решение — CASE по quantity.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 49,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Два диапазона комиссии",
+      "description": "Для первых 15 сделок: trade_id, fee_band — HIGH если commission>100, иначе NORMAL.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,CASE WHEN commission>100 THEN 'HIGH' ELSE 'NORMAL' END AS fee_band FROM trades ORDER BY trade_id LIMIT 15;",
+      "hints": [
+        "Применяй условие в CASE.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 50,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 1,
+      "lessonId": 16,
+      "title": "Длина тикера",
+      "description": "Верни ticker и ticker_len = LENGTH(ticker), отсортируй по ticker.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker,LENGTH(ticker) AS ticker_len FROM instruments ORDER BY ticker;",
+      "hints": [
+        "Длину текста возвращает LENGTH.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 51,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Перевод в верхний регистр",
+      "description": "Верни account_name и uppercase_strategy = UPPER(strategy), сортировка по account_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_name,UPPER(strategy) AS uppercase_strategy FROM accounts ORDER BY account_id;",
+      "hints": [
+        "Верхний регистр делает UPPER.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 52,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Начало тикера",
+      "description": "Верни ticker и first_three = SUBSTR(ticker,1,3), сортировка по тикеру.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker,SUBSTR(ticker,1,3) AS first_three FROM instruments ORDER BY ticker;",
+      "hints": [
+        "SUBSTR начинается с позиции 1.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 53,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Заменить NULL счётом",
+      "description": "Верни account_id и fee = COALESCE((SELECT SUM(commission) FROM trades t WHERE t.account_id=a.account_id),0) для всех счетов a.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_id,COALESCE((SELECT SUM(t.commission) FROM trades t WHERE t.account_id=a.account_id),0) AS fee FROM accounts a ORDER BY a.account_id;",
+      "hints": [
+        "COALESCE(...,0) нужен для счёта без сделок.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 54,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Ценовые категории",
+      "description": "Выведи instrument_id, price_band для первых 20 сделок: >1000 HIGH, >=100 MID, иначе LOW.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,CASE WHEN price>1000 THEN 'HIGH' WHEN price>=100 THEN 'MID' ELSE 'LOW' END AS price_band FROM trades ORDER BY trade_id LIMIT 20;",
+      "hints": [
+        "CASE поддерживает несколько WHEN.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 55,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Округление цены",
+      "description": "Выведи trade_id и rounded_price = ROUND(price,1) для первых 20 сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,ROUND(price,1) AS rounded_price FROM trades ORDER BY trade_id LIMIT 20;",
+      "hints": [
+        "ROUND с 1 разрядом после запятой.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 56,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 2,
+      "lessonId": 16,
+      "title": "Условный знак потока",
+      "description": "Верни первые 20 trade_id и signed_qty: BUY положительное, SELL отрицательное.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,CASE WHEN side='BUY' THEN quantity ELSE -quantity END AS signed_qty FROM trades ORDER BY trade_id LIMIT 20;",
+      "hints": [
+        "Используй CASE, затем quantity или -quantity.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 57,
+      "topic": "Строки, CASE и NULL",
+      "difficulty": 3,
+      "lessonId": 16,
+      "title": "Часть валютного тикера",
+      "description": "Для инструментов класса fx выведи ticker и first_three — первые три символа тикера.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker,SUBSTR(ticker,1,3) AS first_three FROM instruments WHERE asset_class='fx' ORDER BY ticker;",
+      "hints": [
+        "Сочетай WHERE с SUBSTR.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "CASE формирует условное значение; COALESCE подставляет замену для NULL; текстовые функции работают со строками и не изменяют исходные поля."
+    },
+    {
+      "id": 58,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Всего сделок",
+      "description": "Выведи единственный столбец trade_count — количество сделок в trades.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT COUNT(*) AS trade_count FROM trades;",
+      "hints": [
+        "COUNT(*) считает все строки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 59,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Средняя комиссия",
+      "description": "Рассчитай avg_fee = ROUND(AVG(commission),2) по всем сделкам.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ROUND(AVG(commission),2) AS avg_fee FROM trades;",
+      "hints": [
+        "Используй AVG и ROUND.",
+        "Попробуй собрать решение из блоков: SELECT, FROM.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 60,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Минимальная цена",
+      "description": "Найди min_price — минимальную цену среди сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT MIN(price) AS min_price FROM trades;",
+      "hints": [
+        "MIN выбирает минимальное значение.",
+        "Попробуй собрать решение из блоков: SELECT, FROM.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 61,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Максимальная комиссия",
+      "description": "Найди max_fee — максимальную комиссию сделки.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT MAX(commission) AS max_fee FROM trades;",
+      "hints": [
+        "MAX выбирает максимум.",
+        "Попробуй собрать решение из блоков: SELECT, FROM.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 62,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Число инструментов",
+      "description": "Верни instrument_count — количество записей в instruments.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT COUNT(*) AS instrument_count FROM instruments;",
+      "hints": [
+        "Считай строки справочника.",
+        "Попробуй собрать решение из блоков: SELECT, FROM.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 63,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Суммарное количество бумаг",
+      "description": "Выведи quantity_sum как сумму quantity по всем сделкам (учебный показатель).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT SUM(quantity) AS quantity_sum FROM trades;",
+      "hints": [
+        "SUM агрегирует значения.",
+        "Попробуй собрать решение из блоков: SELECT, FROM.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 64,
+      "topic": "Агрегации",
+      "difficulty": 1,
+      "lessonId": 10,
+      "title": "Сделки BUY и SELL",
+      "description": "Покажи side и trades_count по каждой стороне, сортировка по side.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT side,COUNT(*) AS trades_count FROM trades GROUP BY side ORDER BY side;",
+      "hints": [
+        "GROUP BY side.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 65,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Средняя цена по стороне",
+      "description": "Покажи side и avg_price = ROUND(AVG(price),2) по каждой стороне сделки.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT side,ROUND(AVG(price),2) AS avg_price FROM trades GROUP BY side ORDER BY side;",
+      "hints": [
+        "AVG внутри GROUP BY side.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 66,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Комиссия по датам",
+      "description": "Для каждой trade_date вычисли fees = SUM(commission), сортировка по дате.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_date,SUM(commission) AS fees FROM trades GROUP BY trade_date ORDER BY trade_date;",
+      "hints": [
+        "В GROUP BY должна быть дата.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 67,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Объём по инструментам",
+      "description": "По каждому instrument_id вычисли qty = SUM(quantity), сортировка по ID.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,SUM(quantity) AS qty FROM trades GROUP BY instrument_id ORDER BY instrument_id;",
+      "hints": [
+        "Суммируй количества в каждой группе.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 68,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Максимальная цена по инструменту",
+      "description": "Верни instrument_id и max_price = MAX(price) по каждому инструменту.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,MAX(price) AS max_price FROM trades GROUP BY instrument_id ORDER BY instrument_id;",
+      "hints": [
+        "MAX(price) внутри группы инструмента.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 69,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Самая ранняя сделка по счёту",
+      "description": "Верни account_id и first_trade = MIN(trade_date).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,MIN(trade_date) AS first_trade FROM trades GROUP BY account_id ORDER BY account_id;",
+      "hints": [
+        "MIN работает с ISO-датами YYYY-MM-DD.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 70,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Количество сделок больше 5",
+      "description": "Покажи trade_date и trades_count только для дат, в которых сделок больше пяти.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_date,COUNT(*) AS trades_count FROM trades GROUP BY trade_date HAVING COUNT(*)>5 ORDER BY trade_date;",
+      "hints": [
+        "Для условий по агрегатам используй HAVING.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 71,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Активные счета с 20+ сделками",
+      "description": "Верни account_id и trades_count только при COUNT(*)>=20.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,COUNT(*) AS trades_count FROM trades GROUP BY account_id HAVING COUNT(*)>=20 ORDER BY account_id;",
+      "hints": [
+        "HAVING проверяет агрегат.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 72,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Объём более 5000",
+      "description": "Верни instrument_id и total_qty, если SUM(quantity)>5000.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,SUM(quantity) AS total_qty FROM trades GROUP BY instrument_id HAVING SUM(quantity)>5000 ORDER BY instrument_id;",
+      "hints": [
+        "SUM в HAVING.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 73,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Средний спред по инструментам",
+      "description": "По каждому instrument_id верни avg_spread = ROUND(AVG(bid_ask_spread_bps),2).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,ROUND(AVG(bid_ask_spread_bps),2) AS avg_spread FROM liquidity GROUP BY instrument_id ORDER BY instrument_id;",
+      "hints": [
+        "Группируй ликвидность по instrument_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 74,
+      "topic": "Агрегации",
+      "difficulty": 2,
+      "lessonId": 11,
+      "title": "Число котировок по инструментам",
+      "description": "Покажи instrument_id и price_days — число строк цен в daily_prices.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,COUNT(*) AS price_days FROM daily_prices GROUP BY instrument_id ORDER BY instrument_id;",
+      "hints": [
+        "COUNT(*) в daily_prices.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 75,
+      "topic": "Агрегации",
+      "difficulty": 3,
+      "lessonId": 11,
+      "title": "Количество счетов по стратегиям",
+      "description": "Покажи strategy и account_count по каждой стратегии.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT strategy,COUNT(*) AS account_count FROM accounts GROUP BY strategy ORDER BY strategy;",
+      "hints": [
+        "Группировка по текстовой стратегии.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 76,
+      "topic": "Агрегации",
+      "difficulty": 3,
+      "lessonId": 11,
+      "title": "По счёту и стороне",
+      "description": "Покажи account_id, side, trades_count — число сделок по паре счёт/сторона.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,side,COUNT(*) AS trades_count FROM trades GROUP BY account_id,side ORDER BY account_id,side;",
+      "hints": [
+        "GROUP BY двух столбцов формирует пары.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 77,
+      "topic": "Агрегации",
+      "difficulty": 3,
+      "lessonId": 11,
+      "title": "Комиссия только BUY",
+      "description": "Рассчитай account_id, buy_fee = SUM(commission) среди сделок BUY.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,SUM(commission) AS buy_fee FROM trades WHERE side='BUY' GROUP BY account_id ORDER BY account_id;",
+      "hints": [
+        "WHERE до GROUP BY отбирает только покупки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "GROUP BY создаёт группы, COUNT/SUM/AVG/MIN/MAX вычисляют показатели, а HAVING отбирает уже сформированные группы."
+    },
+    {
+      "id": 78,
+      "topic": "Соединения JOIN",
+      "difficulty": 1,
+      "lessonId": 12,
+      "title": "Тикер каждой сделки",
+      "description": "Для первых 15 trade_id покажи тикер инструмента как ticker.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,i.ticker FROM trades t JOIN instruments i ON t.instrument_id=i.instrument_id ORDER BY t.trade_id LIMIT 15;",
+      "hints": [
+        "Соедини instruments с trades по instrument_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 79,
+      "topic": "Соединения JOIN",
+      "difficulty": 1,
+      "lessonId": 12,
+      "title": "Имя счёта и дата",
+      "description": "Первые 15 сделок: trade_id, account_name и trade_date.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,a.account_name,t.trade_date FROM trades t JOIN accounts a ON t.account_id=a.account_id ORDER BY t.trade_id LIMIT 15;",
+      "hints": [
+        "Источник trades и accounts.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 80,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 12,
+      "title": "Сторона и класс актива",
+      "description": "Покажи для первых 20 сделок trade_id, side и asset_class.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,t.side,i.asset_class FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id ORDER BY t.trade_id LIMIT 20;",
+      "hints": [
+        "Нужный класс находится в instruments.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 81,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 12,
+      "title": "Две связанные таблицы",
+      "description": "Покажи для первых 20 сделок trade_id, ticker, account_name.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,i.ticker,a.account_name FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id JOIN accounts a ON a.account_id=t.account_id ORDER BY t.trade_id LIMIT 20;",
+      "hints": [
+        "Два JOIN по двум внешним ключам.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades, instruments, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 82,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 13,
+      "title": "Счета без сделок",
+      "description": "Покажи account_name для счетов без единой сделки.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name FROM accounts a LEFT JOIN trades t ON t.account_id=a.account_id WHERE t.trade_id IS NULL ORDER BY a.account_name;",
+      "hints": [
+        "LEFT JOIN, затем поиск NULL по правой таблице.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 83,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 13,
+      "title": "Инструменты без сделок",
+      "description": "Покажи ticker для инструментов без сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker FROM instruments i LEFT JOIN trades t ON t.instrument_id=i.instrument_id WHERE t.trade_id IS NULL ORDER BY i.ticker;",
+      "hints": [
+        "LEFT JOIN сохраняет TEST0.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 84,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 13,
+      "title": "Сколько сделок у каждого инструмента",
+      "description": "Покажи ticker и trade_count для всех инструментов, включая инструмент без сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,COUNT(t.trade_id) AS trade_count FROM instruments i LEFT JOIN trades t ON t.instrument_id=i.instrument_id GROUP BY i.ticker ORDER BY i.ticker;",
+      "hints": [
+        "COUNT(t.trade_id), а не COUNT(*).",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: instruments, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 85,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 13,
+      "title": "Сделки всех счетов",
+      "description": "Покажи account_name и trade_count всех счетов, включая неактивный.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name,COUNT(t.trade_id) AS trade_count FROM accounts a LEFT JOIN trades t ON t.account_id=a.account_id GROUP BY a.account_name ORDER BY a.account_name;",
+      "hints": [
+        "Слева accounts.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 86,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 13,
+      "title": "Комиссии всех счетов",
+      "description": "Покажи account_name и fees = COALESCE(SUM(commission),0) для всех счетов.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name,COALESCE(SUM(t.commission),0) AS fees FROM accounts a LEFT JOIN trades t ON t.account_id=a.account_id GROUP BY a.account_name ORDER BY a.account_name;",
+      "hints": [
+        "Нужно учесть отсутствие сделок у ACC-DORMANT.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 87,
+      "topic": "Соединения JOIN",
+      "difficulty": 3,
+      "lessonId": 12,
+      "title": "Цена закрытия на дату сделки",
+      "description": "Для первых 15 сделок покажи trade_id, price и close_price из daily_prices ровно на ту же дату и инструмент.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,t.price,p.close_price FROM trades t LEFT JOIN daily_prices p ON p.instrument_id=t.instrument_id AND p.price_date=t.trade_date ORDER BY t.trade_id LIMIT 15;",
+      "hints": [
+        "В ON нужны инструмент И дата.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades, daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 88,
+      "topic": "Соединения JOIN",
+      "difficulty": 3,
+      "lessonId": 12,
+      "title": "Ликвидность на дату сделки",
+      "description": "Для первых 15 сделок покажи trade_id, ticker и bid_ask_spread_bps на дату сделки.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,i.ticker,l.bid_ask_spread_bps FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id LEFT JOIN liquidity l ON l.instrument_id=t.instrument_id AND l.price_date=t.trade_date ORDER BY t.trade_id LIMIT 15;",
+      "hints": [
+        "Два JOIN, второй по дате и ID инструмента.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades, instruments, liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 89,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 12,
+      "title": "Покупки с тикерами",
+      "description": "Покажи trade_id, ticker, quantity только для BUY на инструменте equity.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,i.ticker,t.quantity FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id WHERE t.side='BUY' AND i.asset_class='equity' ORDER BY t.trade_id;",
+      "hints": [
+        "Фильтры находятся в разных таблицах.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 90,
+      "topic": "Соединения JOIN",
+      "difficulty": 2,
+      "lessonId": 12,
+      "title": "Сделки стратегий value_equity",
+      "description": "Выведи trade_id, account_name и strategy для счетов со strategy='value_equity'.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,a.account_name,a.strategy FROM trades t JOIN accounts a ON a.account_id=t.account_id WHERE a.strategy='value_equity' ORDER BY t.trade_id;",
+      "hints": [
+        "JOIN затем WHERE по стратегии.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: trades, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 91,
+      "topic": "Соединения JOIN",
+      "difficulty": 3,
+      "lessonId": 13,
+      "title": "Количество котировок с нулями",
+      "description": "Верни ticker и price_days для всех инструментов, включая TEST0.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,COUNT(p.price_date) AS price_days FROM instruments i LEFT JOIN daily_prices p ON p.instrument_id=i.instrument_id GROUP BY i.ticker ORDER BY i.ticker;",
+      "hints": [
+        "COUNT(p.price_date) не засчитает NULL от LEFT JOIN.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: instruments, daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 92,
+      "topic": "Соединения JOIN",
+      "difficulty": 3,
+      "lessonId": 13,
+      "title": "Ликвидность по тикерам",
+      "description": "Покажи ticker и spread_avg=ROUND(AVG(l.bid_ask_spread_bps),2), включая инструменты без наблюдений.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,ROUND(AVG(l.bid_ask_spread_bps),2) AS spread_avg FROM instruments i LEFT JOIN liquidity l ON l.instrument_id=i.instrument_id GROUP BY i.ticker ORDER BY i.ticker;",
+      "hints": [
+        "LEFT JOIN и AVG; при отсутствии данных будет NULL.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: instruments, liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 93,
+      "topic": "Соединения JOIN",
+      "difficulty": 3,
+      "lessonId": 13,
+      "title": "Доля покупок по счетам",
+      "description": "Для всех счетов покажи account_name, buy_count — количество BUY.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name,SUM(CASE WHEN t.side='BUY' THEN 1 ELSE 0 END) AS buy_count FROM accounts a LEFT JOIN trades t ON t.account_id=a.account_id GROUP BY a.account_name ORDER BY a.account_name;",
+      "hints": [
+        "CASE внутри SUM считает покупки по группам.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 94,
+      "topic": "Соединения JOIN",
+      "difficulty": 3,
+      "lessonId": 12,
+      "title": "Сумма комиссий по классу",
+      "description": "Покажи asset_class и fees — сумму комиссий сделок этого класса.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.asset_class,SUM(t.commission) AS fees FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id GROUP BY i.asset_class ORDER BY i.asset_class;",
+      "hints": [
+        "Группируй по asset_class из instruments.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "JOIN сопоставляет записи по ключам. INNER JOIN оставляет совпадения; LEFT JOIN сохраняет все строки слева, включая отсутствующие связи справа."
+    },
+    {
+      "id": 95,
+      "topic": "Даты и периоды",
+      "difficulty": 1,
+      "lessonId": 17,
+      "title": "Январские сделки",
+      "description": "Выведи trade_id, trade_date для сделок января 2024 по ID.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,trade_date FROM trades WHERE trade_date>='2024-01-01' AND trade_date<'2024-02-01' ORDER BY trade_id;",
+      "hints": [
+        "Период [начало января; начало февраля).",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 96,
+      "topic": "Даты и периоды",
+      "difficulty": 1,
+      "lessonId": 17,
+      "title": "Февральские сделки",
+      "description": "Выведи trade_id, trade_date для февраля 2024 по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,trade_date FROM trades WHERE trade_date>='2024-02-01' AND trade_date<'2024-03-01' ORDER BY trade_id;",
+      "hints": [
+        "Верхнюю границу не включай.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 97,
+      "topic": "Даты и периоды",
+      "difficulty": 1,
+      "lessonId": 17,
+      "title": "Первая торговая неделя",
+      "description": "Выведи trade_id,trade_date для периода 9–12 января 2024 включительно.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,trade_date FROM trades WHERE trade_date>='2024-01-09' AND trade_date<'2024-01-13' ORDER BY trade_id;",
+      "hints": [
+        "Для 12-го включительно верхняя граница — 13 января.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 98,
+      "topic": "Даты и периоды",
+      "difficulty": 2,
+      "lessonId": 17,
+      "title": "Число торговых дней",
+      "description": "Найди trade_days — количество уникальных дат сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT COUNT(DISTINCT trade_date) AS trade_days FROM trades;",
+      "hints": [
+        "Используй COUNT(DISTINCT ...).",
+        "Попробуй собрать решение из блоков: SELECT, FROM.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 99,
+      "topic": "Даты и периоды",
+      "difficulty": 2,
+      "lessonId": 17,
+      "title": "Одна строка на месяц",
+      "description": "Покажи month=STRFTIME('%Y-%m',trade_date) и trades_count по месяцам.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT STRFTIME('%Y-%m',trade_date) AS month,COUNT(*) AS trades_count FROM trades GROUP BY STRFTIME('%Y-%m',trade_date) ORDER BY month;",
+      "hints": [
+        "STRFTIME('%Y-%m',...) извлекает месяц.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 100,
+      "topic": "Даты и периоды",
+      "difficulty": 2,
+      "lessonId": 17,
+      "title": "Комиссии по месяцам",
+      "description": "Покажи month и fees по всем месяцам.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT STRFTIME('%Y-%m',trade_date) AS month,SUM(commission) AS fees FROM trades GROUP BY STRFTIME('%Y-%m',trade_date) ORDER BY month;",
+      "hints": [
+        "GROUP BY по календарному месяцу.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 101,
+      "topic": "Даты и периоды",
+      "difficulty": 2,
+      "lessonId": 17,
+      "title": "Средняя цена SBER за февраль",
+      "description": "Найди avg_price=ROUND(AVG(price),2) для instrument_id=1 в феврале 2024.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ROUND(AVG(price),2) AS avg_price FROM trades WHERE instrument_id=1 AND trade_date>='2024-02-01' AND trade_date<'2024-03-01';",
+      "hints": [
+        "Сначала фильтр по инструменту и датам.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 102,
+      "topic": "Даты и периоды",
+      "difficulty": 2,
+      "lessonId": 17,
+      "title": "Первая и последняя дата",
+      "description": "Выведи first_date и last_date сделок одним SELECT.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT MIN(trade_date) AS first_date,MAX(trade_date) AS last_date FROM trades;",
+      "hints": [
+        "MIN/MAX работают и для дат ISO.",
+        "Попробуй собрать решение из блоков: SELECT, FROM.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 103,
+      "topic": "Даты и периоды",
+      "difficulty": 2,
+      "lessonId": 17,
+      "title": "Дневная комиссия по инструменту",
+      "description": "Для instrument_id=1 покажи trade_date и fees по датам.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_date,SUM(commission) AS fees FROM trades WHERE instrument_id=1 GROUP BY trade_date ORDER BY trade_date;",
+      "hints": [
+        "Группировка после фильтра.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 104,
+      "topic": "Даты и периоды",
+      "difficulty": 3,
+      "lessonId": 17,
+      "title": "Дни со сделками BUY",
+      "description": "Покажи trade_date и buy_count по датам только для BUY.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_date,COUNT(*) AS buy_count FROM trades WHERE side='BUY' GROUP BY trade_date ORDER BY trade_date;",
+      "hints": [
+        "WHERE до GROUP BY.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 105,
+      "topic": "Даты и периоды",
+      "difficulty": 3,
+      "lessonId": 17,
+      "title": "Месяцы с комиссией выше 100",
+      "description": "Покажи month, fees для месяцев, где суммарная комиссия >100.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT STRFTIME('%Y-%m',trade_date) AS month,SUM(commission) AS fees FROM trades GROUP BY STRFTIME('%Y-%m',trade_date) HAVING SUM(commission)>100 ORDER BY month;",
+      "hints": [
+        "Объедини STRFTIME, SUM и HAVING.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 106,
+      "topic": "Даты и периоды",
+      "difficulty": 3,
+      "lessonId": 17,
+      "title": "Дни с 8+ сделками",
+      "description": "Покажи trade_date, trades_count только для дат с количеством сделок >=8.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_date,COUNT(*) AS trades_count FROM trades GROUP BY trade_date HAVING COUNT(*)>=8 ORDER BY trade_date;",
+      "hints": [
+        "COUNT в HAVING.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Даты хранятся как ISO-строки YYYY-MM-DD, поэтому лексикографические диапазоны корректны. Для календарных групп в SQLite можно использовать STRFTIME."
+    },
+    {
+      "id": 107,
+      "topic": "Подзапросы",
+      "difficulty": 2,
+      "lessonId": 14,
+      "title": "Цена выше средней",
+      "description": "Покажи trade_id и price сделок дороже общей средней цены.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,price FROM trades WHERE price>(SELECT AVG(price) FROM trades) ORDER BY trade_id;",
+      "hints": [
+        "В WHERE сравни price с подзапросом AVG(price).",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 108,
+      "topic": "Подзапросы",
+      "difficulty": 2,
+      "lessonId": 14,
+      "title": "Комиссия выше средней",
+      "description": "Покажи trade_id и commission выше средней комиссии.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,commission FROM trades WHERE commission>(SELECT AVG(commission) FROM trades) ORDER BY trade_id;",
+      "hints": [
+        "Подзапрос возвращает одно число.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 109,
+      "topic": "Подзапросы",
+      "difficulty": 2,
+      "lessonId": 14,
+      "title": "Счета с любыми сделками",
+      "description": "Покажи account_name счетов, по которым существует хотя бы одна сделка.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name FROM accounts a WHERE EXISTS(SELECT 1 FROM trades t WHERE t.account_id=a.account_id) ORDER BY a.account_name;",
+      "hints": [
+        "EXISTS проверяет найденные строки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 110,
+      "topic": "Подзапросы",
+      "difficulty": 2,
+      "lessonId": 14,
+      "title": "Неактивные счета через NOT EXISTS",
+      "description": "Покажи account_name счетов без сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name FROM accounts a WHERE NOT EXISTS(SELECT 1 FROM trades t WHERE t.account_id=a.account_id) ORDER BY a.account_name;",
+      "hints": [
+        "NOT EXISTS — противоположность EXISTS.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 111,
+      "topic": "Подзапросы",
+      "difficulty": 2,
+      "lessonId": 14,
+      "title": "Инструменты с покупками",
+      "description": "Покажи тикеры инструментов, по которым есть хотя бы одна сделка BUY.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker FROM instruments i WHERE EXISTS(SELECT 1 FROM trades t WHERE t.instrument_id=i.instrument_id AND t.side='BUY') ORDER BY i.ticker;",
+      "hints": [
+        "Подзапрос связывается через instrument_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 112,
+      "topic": "Подзапросы",
+      "difficulty": 2,
+      "lessonId": 14,
+      "title": "Инструменты без сделок",
+      "description": "Найди тикеры инструментов без каких-либо сделок через NOT EXISTS.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker FROM instruments i WHERE NOT EXISTS(SELECT 1 FROM trades t WHERE t.instrument_id=i.instrument_id) ORDER BY i.ticker;",
+      "hints": [
+        "NOT EXISTS по instrument_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 113,
+      "topic": "Подзапросы",
+      "difficulty": 3,
+      "lessonId": 14,
+      "title": "Риск-лимиты выше среднего",
+      "description": "Покажи account_name и risk_limit_rub счетов, где лимит выше среднего по всем счетам.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_name,risk_limit_rub FROM accounts WHERE risk_limit_rub>(SELECT AVG(risk_limit_rub) FROM accounts) ORDER BY account_name;",
+      "hints": [
+        "Подзапрос вычисляет средний лимит.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 114,
+      "topic": "Подзапросы",
+      "difficulty": 3,
+      "lessonId": 14,
+      "title": "Самая дорогая сделка каждого инструмента",
+      "description": "Выведи instrument_id, trade_id, price сделок с максимальной ценой внутри instrument_id (включая совпадения).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.instrument_id,t.trade_id,t.price FROM trades t WHERE t.price=(SELECT MAX(x.price) FROM trades x WHERE x.instrument_id=t.instrument_id) ORDER BY t.instrument_id,t.trade_id;",
+      "hints": [
+        "Коррелированный подзапрос MAX для текущего инструмента.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 115,
+      "topic": "Подзапросы",
+      "difficulty": 3,
+      "lessonId": 14,
+      "title": "Последняя дата каждого инструмента",
+      "description": "Выведи instrument_id и last_date — последнюю дату сделки инструмента.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.instrument_id,(SELECT MAX(t.trade_date) FROM trades t WHERE t.instrument_id=i.instrument_id) AS last_date FROM instruments i ORDER BY i.instrument_id;",
+      "hints": [
+        "Скалярный подзапрос, для TEST0 ожидается NULL.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 116,
+      "topic": "Подзапросы",
+      "difficulty": 3,
+      "lessonId": 14,
+      "title": "Счета с покупками SBER",
+      "description": "Покажи account_name счетов с BUY по instrument_id=1.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name FROM accounts a WHERE EXISTS(SELECT 1 FROM trades t WHERE t.account_id=a.account_id AND t.instrument_id=1 AND t.side='BUY') ORDER BY a.account_name;",
+      "hints": [
+        "В EXISTS нужно три условия.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 117,
+      "topic": "Подзапросы",
+      "difficulty": 3,
+      "lessonId": 14,
+      "title": "Цена выше средней своего инструмента",
+      "description": "Выведи trade_id и price сделок, где цена превышает среднюю цену по instrument_id этой сделки.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,t.price FROM trades t WHERE t.price>(SELECT AVG(x.price) FROM trades x WHERE x.instrument_id=t.instrument_id) ORDER BY t.trade_id;",
+      "hints": [
+        "Свяжи подзапрос по instrument_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 118,
+      "topic": "Подзапросы",
+      "difficulty": 3,
+      "lessonId": 14,
+      "title": "Количество сделок каждого счёта скалярно",
+      "description": "Покажи account_name и trade_count для всех счетов через коррелированный COUNT(*).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name,(SELECT COUNT(*) FROM trades t WHERE t.account_id=a.account_id) AS trade_count FROM accounts a ORDER BY a.account_name;",
+      "hints": [
+        "Вложенный COUNT вернёт 0 для пустого счёта.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Подзапрос выполняет промежуточную проверку или расчёт. EXISTS удобен для вопроса «существует ли хоть одна связанная строка?»."
+    },
+    {
+      "id": 119,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 2,
+      "lessonId": 15,
+      "title": "Комиссия по счетам через CTE",
+      "description": "С помощью CTE fees посчитай account_id, total_fee, затем выведи их по возрастанию account_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH fees AS(SELECT account_id,SUM(commission) AS total_fee FROM trades GROUP BY account_id) SELECT account_id,total_fee FROM fees ORDER BY account_id;",
+      "hints": [
+        "Внутри WITH выполняется GROUP BY.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 120,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 2,
+      "lessonId": 15,
+      "title": "Сделки дороже 1000 через CTE",
+      "description": "CTE expensive выбирает trade_id и price при price>1000. Выведи итог по trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH expensive AS(SELECT trade_id,price FROM trades WHERE price>1000) SELECT trade_id,price FROM expensive ORDER BY trade_id;",
+      "hints": [
+        "Сначала отфильтруй, потом обратись к CTE.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 121,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 2,
+      "lessonId": 15,
+      "title": "Активность счетов через CTE",
+      "description": "CTE activity: account_id и trade_count. Снаружи покажи строки с trade_count>20 по account_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH activity AS(SELECT account_id,COUNT(*) AS trade_count FROM trades GROUP BY account_id) SELECT account_id,trade_count FROM activity WHERE trade_count>20 ORDER BY account_id;",
+      "hints": [
+        "Второй SELECT отбирает готовые суммы.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 122,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 3,
+      "lessonId": 15,
+      "title": "Все счета с нулевой комиссией",
+      "description": "CTE fees суммирует комиссию по счетам; LEFT JOIN с accounts должен сохранить неактивный счёт.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH fees AS(SELECT account_id,SUM(commission) AS fee FROM trades GROUP BY account_id) SELECT a.account_name,COALESCE(f.fee,0) AS fee FROM accounts a LEFT JOIN fees f ON f.account_id=a.account_id ORDER BY a.account_name;",
+      "hints": [
+        "LEFT JOIN между accounts и CTE.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 123,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 3,
+      "lessonId": 15,
+      "title": "Сделки выше среднего по инструменту",
+      "description": "CTE avg_price считает среднюю цену для каждого instrument_id; покажи trade_id и price сделок выше своей средней.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH avg_price AS(SELECT instrument_id,AVG(price) AS average_price FROM trades GROUP BY instrument_id) SELECT t.trade_id,t.price FROM trades t JOIN avg_price p ON p.instrument_id=t.instrument_id WHERE t.price>p.average_price ORDER BY t.trade_id;",
+      "hints": [
+        "Сначала средние, потом JOIN с исходной таблицей.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, JOIN, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 124,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 3,
+      "lessonId": 15,
+      "title": "Топ-3 счёта по комиссии",
+      "description": "CTE fees, затем покажи account_id и total_fee трёх крупнейших по комиссии.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH fees AS(SELECT account_id,SUM(commission) AS total_fee FROM trades GROUP BY account_id) SELECT account_id,total_fee FROM fees ORDER BY total_fee DESC,account_id LIMIT 3;",
+      "hints": [
+        "Используй ORDER BY ... DESC и LIMIT.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, GROUP BY, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 125,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 3,
+      "lessonId": 15,
+      "title": "Активность по инструментам с тикером",
+      "description": "CTE counts считает trades_count по instrument_id; добавь ticker и сортируй по ticker.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH counts AS(SELECT instrument_id,COUNT(*) AS trades_count FROM trades GROUP BY instrument_id) SELECT i.ticker,c.trades_count FROM counts c JOIN instruments i ON i.instrument_id=c.instrument_id ORDER BY i.ticker;",
+      "hints": [
+        "Сначала агрегируй, потом JOIN.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 126,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 3,
+      "lessonId": 15,
+      "title": "Два этапа: средняя комиссия",
+      "description": "CTE fees считает сумму комиссий по account_id. Наружный SELECT возвращает avg_account_fee = ROUND(AVG(total_fee),2).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH fees AS(SELECT account_id,SUM(commission) AS total_fee FROM trades GROUP BY account_id) SELECT ROUND(AVG(total_fee),2) AS avg_account_fee FROM fees;",
+      "hints": [
+        "Среднее по предварительно сгруппированным значениям.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, GROUP BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 127,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 3,
+      "lessonId": 15,
+      "title": "Средняя дневная активность",
+      "description": "CTE daily считает trades_count по trade_date; снаружи верни avg_daily_count=ROUND(AVG(trades_count),2).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH daily AS(SELECT trade_date,COUNT(*) AS trades_count FROM trades GROUP BY trade_date) SELECT ROUND(AVG(trades_count),2) AS avg_daily_count FROM daily;",
+      "hints": [
+        "Два уровня агрегатов через WITH.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, GROUP BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 128,
+      "topic": "CTE и многоэтапные отчёты",
+      "difficulty": 3,
+      "lessonId": 15,
+      "title": "Покупки и продажи в одном отчёте",
+      "description": "CTE by_side агрегирует side и trades_count. Покажи в итоговом SELECT side и trades_count.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH by_side AS(SELECT side,COUNT(*) AS trades_count FROM trades GROUP BY side) SELECT side,trades_count FROM by_side ORDER BY side;",
+      "hints": [
+        "CTE — именованная выборка, используемая позже.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "WITH ... AS даёт имя промежуточному результату одного запроса. С ним расчёты легче читать и проверять по этапам."
+    },
+    {
+      "id": 129,
+      "topic": "Оконные функции",
+      "difficulty": 2,
+      "lessonId": 18,
+      "title": "Номер сделки внутри счёта",
+      "description": "Покажи trade_id, account_id и rn=ROW_NUMBER по trade_id внутри account_id, первые 30 строк в порядке account_id,rn.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,account_id,ROW_NUMBER() OVER(PARTITION BY account_id ORDER BY trade_id) AS rn FROM trades ORDER BY account_id,rn LIMIT 30;",
+      "hints": [
+        "ROW_NUMBER и PARTITION BY account_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 130,
+      "topic": "Оконные функции",
+      "difficulty": 2,
+      "lessonId": 18,
+      "title": "Номер цены внутри инструмента",
+      "description": "Покажи instrument_id, price_date, rn — номер наблюдения по дате в инструменте, первые 30 строк.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,price_date,ROW_NUMBER() OVER(PARTITION BY instrument_id ORDER BY price_date) AS rn FROM daily_prices ORDER BY instrument_id,price_date LIMIT 30;",
+      "hints": [
+        "PARTITION BY инструмент, ORDER BY дата.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT, OVER.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 131,
+      "topic": "Оконные функции",
+      "difficulty": 2,
+      "lessonId": 19,
+      "title": "Предыдущая комиссия",
+      "description": "Покажи trade_id, commission и prev_fee — комиссию предыдущей сделки по trade_id для первых 20 сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,commission,LAG(commission) OVER(ORDER BY trade_id) AS prev_fee FROM trades ORDER BY trade_id LIMIT 20;",
+      "hints": [
+        "Используй LAG.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 132,
+      "topic": "Оконные функции",
+      "difficulty": 2,
+      "lessonId": 19,
+      "title": "Следующая цена закрытия",
+      "description": "Покажи instrument_id, price_date, next_close для первых 30 наблюдений.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,price_date,LEAD(close_price) OVER(PARTITION BY instrument_id ORDER BY price_date) AS next_close FROM daily_prices ORDER BY instrument_id,price_date LIMIT 30;",
+      "hints": [
+        "LEAD смотрит на следующую строку окна.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT, OVER.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 133,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 18,
+      "title": "Три самые дорогие сделки каждого инструмента",
+      "description": "Верни instrument_id, trade_id, price трёх самых дорогих сделок каждого инструмента, отсортируй по инструменту и цене.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH ranked AS(SELECT instrument_id,trade_id,price,ROW_NUMBER() OVER(PARTITION BY instrument_id ORDER BY price DESC,trade_id) AS rn FROM trades) SELECT instrument_id,trade_id,price FROM ranked WHERE rn<=3 ORDER BY instrument_id,price DESC,trade_id;",
+      "hints": [
+        "CTE позволяет фильтровать rn после вычисления.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, WHERE, ORDER BY, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 134,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 18,
+      "title": "Последняя сделка каждого счёта",
+      "description": "Покажи account_id, trade_id, trade_date последней сделки каждого активного счёта; tie-breaker trade_id DESC.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH ranked AS(SELECT account_id,trade_id,trade_date,ROW_NUMBER() OVER(PARTITION BY account_id ORDER BY trade_date DESC,trade_id DESC) AS rn FROM trades) SELECT account_id,trade_id,trade_date FROM ranked WHERE rn=1 ORDER BY account_id;",
+      "hints": [
+        "Нумеруй строки начиная с самой новой.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, WHERE, ORDER BY, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 135,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 19,
+      "title": "Накопленная комиссия по счёту 1",
+      "description": "Покажи trade_id, commission и running_fee для счёта 1 в порядке trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,commission,SUM(commission) OVER(ORDER BY trade_id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_fee FROM trades WHERE account_id=1 ORDER BY trade_id;",
+      "hints": [
+        "SUM OVER и рамка ROWS.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 136,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 19,
+      "title": "Накопленное количество SBER",
+      "description": "Покажи trade_id, quantity и cumulative_qty по instrument_id=1 в порядке trade_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,quantity,SUM(quantity) OVER(ORDER BY trade_id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cumulative_qty FROM trades WHERE instrument_id=1 ORDER BY trade_id;",
+      "hints": [
+        "Накопительный SUM для одного инструмента.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 137,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 19,
+      "title": "Скользящая цена пяти наблюдений",
+      "description": "Для instrument_id=1 покажи price_date, close_price, sma5 — среднюю текущего и четырёх предыдущих наблюдений.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,close_price,ROUND(AVG(close_price) OVER(ORDER BY price_date ROWS BETWEEN 4 PRECEDING AND CURRENT ROW),2) AS sma5 FROM daily_prices WHERE instrument_id=1 ORDER BY price_date;",
+      "hints": [
+        "Рамка ROWS BETWEEN 4 PRECEDING AND CURRENT ROW.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, OVER.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 138,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 18,
+      "title": "Ранг цены внутри инструмента",
+      "description": "Верни instrument_id, trade_id, price и price_rank=RANK() по убыванию price для первых 30 строк.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,trade_id,price,RANK() OVER(PARTITION BY instrument_id ORDER BY price DESC) AS price_rank FROM trades ORDER BY instrument_id,price DESC,trade_id LIMIT 30;",
+      "hints": [
+        "RANK сохраняет одинаковый ранг для равных значений.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 139,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 18,
+      "title": "Позиция сделки среди счета",
+      "description": "Верни account_id, trade_id, price, rn по убыванию price в пределах account_id, первые 30 строк.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT account_id,trade_id,price,ROW_NUMBER() OVER(PARTITION BY account_id ORDER BY price DESC,trade_id) AS rn FROM trades ORDER BY account_id,rn LIMIT 30;",
+      "hints": [
+        "Применяй PARTITION BY account_id.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 140,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 19,
+      "title": "Изменение цены закрытия",
+      "description": "Для инструмента 1 покажи price_date, close_price, diff_vs_prev — разницу с предыдущей ценой.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,close_price,close_price-LAG(close_price) OVER(ORDER BY price_date) AS diff_vs_prev FROM daily_prices WHERE instrument_id=1 ORDER BY price_date;",
+      "hints": [
+        "Разница close_price - LAG(close_price).",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, OVER.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 141,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 19,
+      "title": "Изменение цены в процентах",
+      "description": "Для instrument_id=2 покажи price_date и pct_change, округлённое до двух знаков; первая дата NULL.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "WITH p AS(SELECT price_date,close_price,LAG(close_price) OVER(ORDER BY price_date) AS prev_close FROM daily_prices WHERE instrument_id=2) SELECT price_date,ROUND(100.0*(close_price-prev_close)/NULLIF(prev_close,0),2) AS pct_change FROM p ORDER BY price_date;",
+      "hints": [
+        "Сначала LAG в CTE, затем процентный расчёт.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WITH, WHERE, ORDER BY, OVER.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 142,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 18,
+      "title": "Максимальная комиссия рядом со сделкой",
+      "description": "Для первых 20 сделок выведи trade_id, account_id, commission, max_account_fee — максимальную комиссию по счёту.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,account_id,commission,MAX(commission) OVER(PARTITION BY account_id) AS max_account_fee FROM trades ORDER BY trade_id LIMIT 20;",
+      "hints": [
+        "MAX(...) OVER(PARTITION BY account_id).",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 143,
+      "topic": "Оконные функции",
+      "difficulty": 3,
+      "lessonId": 18,
+      "title": "Число сделок рядом с каждой записью",
+      "description": "Для первых 20 сделок выведи trade_id, account_id и account_trades — общее число сделок счёта.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,account_id,COUNT(*) OVER(PARTITION BY account_id) AS account_trades FROM trades ORDER BY trade_id LIMIT 20;",
+      "hints": [
+        "COUNT(*) OVER не схлопывает строки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, LIMIT, OVER.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Оконные функции сохраняют отдельные строки: PARTITION BY делит записи на независимые группы, ORDER BY определяет порядок вычисления."
+    },
+    {
+      "id": 144,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 25,
+      "title": "Условная стоимость сделок SBER",
+      "description": "Найди example_value = SUM(quantity*price) только для instrument_id=1.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT SUM(quantity*price) AS example_value FROM trades WHERE instrument_id=1;",
+      "hints": [
+        "Ограничься одним инструментом.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 145,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 25,
+      "title": "Условная стоимость BUY SBER",
+      "description": "Найди example_value для BUY по instrument_id=1.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT SUM(quantity*price) AS example_value FROM trades WHERE instrument_id=1 AND side='BUY';",
+      "hints": [
+        "Два условия в WHERE.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 146,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 25,
+      "title": "Условная стоимость SELL GAZP",
+      "description": "Найди example_value по продажам instrument_id=2.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT SUM(quantity*price) AS example_value FROM trades WHERE instrument_id=2 AND side='SELL';",
+      "hints": [
+        "Используй SUM(quantity*price).",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 147,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 25,
+      "title": "Количество сделок SBER по стороне",
+      "description": "Выведи side и trades_count для instrument_id=1.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT side,COUNT(*) AS trades_count FROM trades WHERE instrument_id=1 GROUP BY side ORDER BY side;",
+      "hints": [
+        "Фильтрация инструмента перед группировкой.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 148,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 26,
+      "title": "Подписанное количество по счёту",
+      "description": "Для account_id=1 выведи signed_qty = SUM(BUY quantity, SELL -quantity) по каждому instrument_id.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END) AS signed_qty FROM trades WHERE account_id=1 GROUP BY instrument_id ORDER BY instrument_id;",
+      "hints": [
+        "CASE внутри SUM задаёт знак.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта. Начальной позиции здесь нет, это чистое изменение количества по учтённым сделкам."
+    },
+    {
+      "id": 149,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 26,
+      "title": "Чистый денежный поток по счёту",
+      "description": "Для account_id=1 посчитай flow: BUY — расход quantity*price, SELL — приход; комиссия не учитывается.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT SUM(CASE WHEN side='BUY' THEN -quantity*price ELSE quantity*price END) AS flow FROM trades WHERE account_id=1;",
+      "hints": [
+        "Для BUY знак отрицательный.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта. Смешение инструментов означает, что сумму нельзя автоматически трактовать как реальный денежный остаток."
+    },
+    {
+      "id": 150,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 26,
+      "title": "Комиссия по сторонам SBER",
+      "description": "Для instrument_id=1 посчитай side, fees=SUM(commission).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT side,SUM(commission) AS fees FROM trades WHERE instrument_id=1 GROUP BY side ORDER BY side;",
+      "hints": [
+        "WHERE инструмент, GROUP BY сторона.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 151,
+      "topic": "Брокерская практика",
+      "difficulty": 2,
+      "lessonId": 27,
+      "title": "Средняя цена акции",
+      "description": "Для instrument_id=1 посчитай avg_price=ROUND(AVG(price),2).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ROUND(AVG(price),2) AS avg_price FROM trades WHERE instrument_id=1;",
+      "hints": [
+        "AVG усредняет цену каждого исполнения.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 152,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 27,
+      "title": "Средневзвешенная цена SBER",
+      "description": "Посчитай weighted_price = ROUND(SUM(quantity*price)/SUM(quantity),2) по instrument_id=1.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ROUND(SUM(quantity*price)*1.0/NULLIF(SUM(quantity),0),2) AS weighted_price FROM trades WHERE instrument_id=1;",
+      "hints": [
+        "Взвешивание количеством, знаменатель защити NULLIF.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта. Простое AVG(price) при разном quantity даст другой ответ."
+    },
+    {
+      "id": 153,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 27,
+      "title": "Средневзвешенная цена BUY LKOH",
+      "description": "Посчитай weighted_price для BUY инструмента 3 с округлением до двух знаков.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ROUND(SUM(quantity*price)*1.0/NULLIF(SUM(quantity),0),2) AS weighted_price FROM trades WHERE instrument_id=3 AND side='BUY';",
+      "hints": [
+        "Отбери BUY и LKOH перед вычислением.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 154,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 29,
+      "title": "Инструменты по среднему спреду",
+      "description": "Покажи ticker и avg_spread=ROUND(AVG(bid_ask_spread_bps),2), отсортируй по среднему спреду от меньшего к большему, затем ticker.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,ROUND(AVG(l.bid_ask_spread_bps),2) AS avg_spread FROM liquidity l JOIN instruments i ON i.instrument_id=l.instrument_id GROUP BY i.ticker ORDER BY avg_spread,i.ticker;",
+      "hints": [
+        "JOIN, AVG и ORDER BY.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: liquidity, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 155,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 29,
+      "title": "Десять самых ликвидных дней SBER",
+      "description": "Покажи price_date и turnover_rub инструмента 1 для десяти максимальных дневных оборотов.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,turnover_rub FROM liquidity WHERE instrument_id=1 ORDER BY turnover_rub DESC,price_date LIMIT 10;",
+      "hints": [
+        "ORDER BY оборот DESC.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, LIMIT.",
+        "Нужные таблицы: liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 156,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 29,
+      "title": "Дни с широким спредом SBER",
+      "description": "Покажи price_date и bid_ask_spread_bps для инструмента 1, если спред>10 bps.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,bid_ask_spread_bps FROM liquidity WHERE instrument_id=1 AND bid_ask_spread_bps>10 ORDER BY price_date;",
+      "hints": [
+        "WHERE инструмент и порог.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 157,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 29,
+      "title": "Торговая активность за дату",
+      "description": "На дату 2024-01-09 покажи ticker и trades_count из liquidity по каждому инструменту.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,l.trades_count FROM liquidity l JOIN instruments i ON i.instrument_id=l.instrument_id WHERE l.price_date='2024-01-09' ORDER BY i.ticker;",
+      "hints": [
+        "JOIN ликвидности со справочником, фильтр по дате.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: liquidity, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 158,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 28,
+      "title": "Дневное изменение SBER",
+      "description": "Покажи price_date и price_change для инструмента 1, цена минус предыдущее закрытие.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,close_price-LAG(close_price) OVER(ORDER BY price_date) AS price_change FROM daily_prices WHERE instrument_id=1 ORDER BY price_date;",
+      "hints": [
+        "LAG по дате одного инструмента.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, OVER.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 159,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 30,
+      "title": "Комиссия в bps для SBER",
+      "description": "Посчитай fee_bps для instrument_id=1: 10000 * SUM(commission) / SUM(quantity*price), округление до 2 знаков.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ROUND(10000.0*SUM(commission)/NULLIF(SUM(quantity*price),0),2) AS fee_bps FROM trades WHERE instrument_id=1;",
+      "hints": [
+        "Считай для одного инструмента.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 160,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 30,
+      "title": "Доля комиссии по сторонам",
+      "description": "Для instrument_id=1 покажи side и fee_bps=ROUND(10000*SUM(commission)/SUM(quantity*price),2).",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT side,ROUND(10000.0*SUM(commission)/NULLIF(SUM(quantity*price),0),2) AS fee_bps FROM trades WHERE instrument_id=1 GROUP BY side ORDER BY side;",
+      "hints": [
+        "Сначала фильтр инструмента, затем стороны.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 161,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 31,
+      "title": "Активность счёта по дням",
+      "description": "Для account_id=2 выведи trade_date, trades_count и total_fee.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_date,COUNT(*) AS trades_count,SUM(commission) AS total_fee FROM trades WHERE account_id=2 GROUP BY trade_date ORDER BY trade_date;",
+      "hints": [
+        "Группируй по дате одного счёта.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 162,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 31,
+      "title": "Спред и дата сделки",
+      "description": "Покажи trade_id, trade_date, ticker, side и bid_ask_spread_bps для первых 25 сделок с ликвидностью соответствующего инструмента и даты.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,t.trade_date,i.ticker,t.side,l.bid_ask_spread_bps FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id LEFT JOIN liquidity l ON l.instrument_id=t.instrument_id AND l.price_date=t.trade_date ORDER BY t.trade_id LIMIT 25;",
+      "hints": [
+        "В JOIN с liquidity дата обязательна.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, ORDER BY, LIMIT.",
+        "Нужные таблицы: trades, instruments, liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Ликвидность привязывается к конкретному инструменту и дате. Если соединить только по инструменту, одна сделка размножится на множество дат."
+    },
+    {
+      "id": 163,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 30,
+      "title": "Максимальная комиссия по счёту",
+      "description": "Покажи account_name и max_fee по всем счетам со сделками.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_name,MAX(t.commission) AS max_fee FROM accounts a JOIN trades t ON t.account_id=a.account_id GROUP BY a.account_name ORDER BY a.account_name;",
+      "hints": [
+        "MAX внутри групп по названию счёта.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 164,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 31,
+      "title": "Счёт со стратегией none без сделок",
+      "description": "Покажи account_id, account_name, strategy для счетов со strategy='none', у которых нет сделок.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT a.account_id,a.account_name,a.strategy FROM accounts a LEFT JOIN trades t ON t.account_id=a.account_id WHERE a.strategy='none' AND t.trade_id IS NULL ORDER BY a.account_id;",
+      "hints": [
+        "Слева справочник accounts.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: accounts, trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Наличие стратегии none — только дополнительный фильтр, отсутствие сделок определяется LEFT JOIN и проверкой NULL."
+    },
+    {
+      "id": 165,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 25,
+      "title": "Самый большой учебный оборот по классу",
+      "description": "По asset_class посчитай example_value=SUM(quantity*price), сортировка по классу.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.asset_class,SUM(t.quantity*t.price) AS example_value FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id GROUP BY i.asset_class ORDER BY i.asset_class;",
+      "hints": [
+        "Суммируй после JOIN на asset_class.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта. Для разных классов это только условные суммы и экономически несопоставимы."
+    },
+    {
+      "id": 166,
+      "topic": "Брокерская практика",
+      "difficulty": 3,
+      "lessonId": 29,
+      "title": "Торговый объём и дни котировок",
+      "description": "Покажи ticker и price_days для всех инструментов с котировками.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker,COUNT(p.price_date) AS price_days FROM instruments i JOIN daily_prices p ON p.instrument_id=i.instrument_id GROUP BY i.ticker ORDER BY i.ticker;",
+      "hints": [
+        "Свяжи цены со справочником и посчитай даты.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, GROUP BY, ORDER BY.",
+        "Нужные таблицы: instruments, daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Это учебные расчёты на синтетических сделках. Произведение quantity × price не всегда является рублёвым оборотом: нужны единицы котирования, множители и валюта."
+    },
+    {
+      "id": 167,
+      "topic": "Контроль качества данных",
+      "difficulty": 2,
+      "lessonId": 9,
+      "title": "Проверка положительных количеств",
+      "description": "Покажи trade_id и quantity для сделок с quantity<=0.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,quantity FROM trades WHERE quantity<=0 ORDER BY trade_id;",
+      "hints": [
+        "Нужно проверить условие CHECK(quantity>0).",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 168,
+      "topic": "Контроль качества данных",
+      "difficulty": 2,
+      "lessonId": 9,
+      "title": "Проверка положительных цен",
+      "description": "Покажи trade_id и price для цены <=0.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,price FROM trades WHERE price<=0 ORDER BY trade_id;",
+      "hints": [
+        "Этот запрос должен возвращать пустой результат.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 169,
+      "topic": "Контроль качества данных",
+      "difficulty": 2,
+      "lessonId": 9,
+      "title": "Проверка комиссии",
+      "description": "Покажи trade_id и commission для комиссии <0.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,commission FROM trades WHERE commission<0 ORDER BY trade_id;",
+      "hints": [
+        "CHECK не допускает отрицательную комиссию.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 170,
+      "topic": "Контроль качества данных",
+      "difficulty": 2,
+      "lessonId": 9,
+      "title": "Поиск дублей trade_id",
+      "description": "Покажи trade_id и cnt для ID сделок, встречающихся более одного раза.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,COUNT(*) AS cnt FROM trades GROUP BY trade_id HAVING COUNT(*)>1 ORDER BY trade_id;",
+      "hints": [
+        "Дубли отбирай через HAVING.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 171,
+      "topic": "Контроль качества данных",
+      "difficulty": 2,
+      "lessonId": 9,
+      "title": "Поиск повторяющихся тикеров",
+      "description": "Покажи ticker и cnt только если один тикер встречается более одного раза.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker,COUNT(*) AS cnt FROM instruments GROUP BY ticker HAVING COUNT(*)>1 ORDER BY ticker;",
+      "hints": [
+        "Уникальность тикеров задана в схеме.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 172,
+      "topic": "Контроль качества данных",
+      "difficulty": 2,
+      "lessonId": 8,
+      "title": "Осиротевшие сделки по инструменту",
+      "description": "Покажи trade_id и instrument_id сделок, у которых нет инструмента.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,t.instrument_id FROM trades t LEFT JOIN instruments i ON i.instrument_id=t.instrument_id WHERE i.instrument_id IS NULL ORDER BY t.trade_id;",
+      "hints": [
+        "LEFT JOIN и IS NULL справа.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 173,
+      "topic": "Контроль качества данных",
+      "difficulty": 2,
+      "lessonId": 8,
+      "title": "Осиротевшие сделки по счёту",
+      "description": "Покажи trade_id и account_id сделок, не связанных со счетом.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,t.account_id FROM trades t LEFT JOIN accounts a ON a.account_id=t.account_id WHERE a.account_id IS NULL ORDER BY t.trade_id;",
+      "hints": [
+        "LEFT JOIN + NULL означает отсутствие связи.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: trades, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 174,
+      "topic": "Контроль качества данных",
+      "difficulty": 2,
+      "lessonId": 8,
+      "title": "Повторные дневные цены",
+      "description": "Покажи price_date, instrument_id, cnt для повторных пар.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,instrument_id,COUNT(*) AS cnt FROM daily_prices GROUP BY price_date,instrument_id HAVING COUNT(*)>1 ORDER BY price_date,instrument_id;",
+      "hints": [
+        "Составной PK запрещает повтор пары.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 175,
+      "topic": "Контроль качества данных",
+      "difficulty": 3,
+      "lessonId": 8,
+      "title": "Повторная ликвидность по ключу",
+      "description": "Покажи price_date, instrument_id, cnt для дублирующихся пар в liquidity.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT price_date,instrument_id,COUNT(*) AS cnt FROM liquidity GROUP BY price_date,instrument_id HAVING COUNT(*)>1 ORDER BY price_date,instrument_id;",
+      "hints": [
+        "GROUP BY оба поля составного PK.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, GROUP BY, HAVING, ORDER BY.",
+        "Нужные таблицы: liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 176,
+      "topic": "Контроль качества данных",
+      "difficulty": 3,
+      "lessonId": 13,
+      "title": "Контроль количества после JOIN",
+      "description": "Покажи joined_count — количество сделок после соединения с instruments и accounts по ключам.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT COUNT(*) AS joined_count FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id JOIN accounts a ON a.account_id=t.account_id;",
+      "hints": [
+        "Сделки не должны размножаться при соединении со справочниками.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN.",
+        "Нужные таблицы: trades, instruments, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 177,
+      "topic": "Контроль качества данных",
+      "difficulty": 3,
+      "lessonId": 8,
+      "title": "Неверные стороны сделки",
+      "description": "Покажи trade_id и side, если side не равен BUY и не равен SELL.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,side FROM trades WHERE side NOT IN ('BUY','SELL') ORDER BY trade_id;",
+      "hints": [
+        "Проверка CHECK из схемы.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 178,
+      "topic": "Контроль качества данных",
+      "difficulty": 3,
+      "lessonId": 9,
+      "title": "Отсутствие цены закрытия на дату сделки",
+      "description": "Покажи trade_id, trade_date и instrument_id, если для сделки отсутствует дневная цена инструмента на дату исполнения.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT t.trade_id,t.trade_date,t.instrument_id FROM trades t LEFT JOIN daily_prices p ON p.instrument_id=t.instrument_id AND p.price_date=t.trade_date WHERE p.instrument_id IS NULL ORDER BY t.trade_id;",
+      "hints": [
+        "JOIN по двум полям и поиск NULL.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: trades, daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 179,
+      "topic": "Контроль качества данных",
+      "difficulty": 3,
+      "lessonId": 9,
+      "title": "Нулевые дни торговой ликвидности",
+      "description": "Покажи instrument_id, price_date для записей liquidity с trades_count=0.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id,price_date FROM liquidity WHERE trades_count=0 ORDER BY instrument_id,price_date;",
+      "hints": [
+        "Проверяй trades_count, это отдельное поле.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY.",
+        "Нужные таблицы: liquidity. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 180,
+      "topic": "Контроль качества данных",
+      "difficulty": 3,
+      "lessonId": 8,
+      "title": "Отсутствующие котировки у инструментов",
+      "description": "Выведи ticker инструментов без записей в daily_prices.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT i.ticker FROM instruments i LEFT JOIN daily_prices p ON p.instrument_id=i.instrument_id WHERE p.instrument_id IS NULL ORDER BY i.ticker;",
+      "hints": [
+        "LEFT JOIN + IS NULL.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN, WHERE, ORDER BY.",
+        "Нужные таблицы: instruments, daily_prices. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 181,
+      "topic": "Контроль качества данных",
+      "difficulty": 3,
+      "lessonId": 9,
+      "title": "Сопоставление числа строк",
+      "description": "Одним SELECT покажи trade_rows и joined_rows: число исходных сделок и число строк после корректного JOIN с instruments.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT (SELECT COUNT(*) FROM trades) AS trade_rows,(SELECT COUNT(*) FROM trades t JOIN instruments i ON i.instrument_id=t.instrument_id) AS joined_rows;",
+      "hints": [
+        "Сравни два подзапроса COUNT.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, JOIN.",
+        "Нужные таблицы: trades, instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "Контрольный SELECT не исправляет данные, но помогает обнаружить дубли, невалидные значения, отсутствующие связи или неожиданную кратность JOIN."
+    },
+    {
+      "id": 182,
+      "topic": "UNION и операции с наборами",
+      "difficulty": 2,
+      "lessonId": 20,
+      "title": "Список кодов и тикеров",
+      "description": "Выведи code для ticker из instruments и account_name из accounts, без повторов по алфавиту.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker AS code FROM instruments UNION SELECT account_name FROM accounts ORDER BY code;",
+      "hints": [
+        "Одинаковые имена одного столбца и UNION.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, ORDER BY, UNION.",
+        "Нужные таблицы: instruments, accounts. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "UNION соединяет совместимые результирующие наборы и убирает повторы; UNION ALL сохраняет все совпадающие строки. Порядок задаётся в конце."
+    },
+    {
+      "id": 183,
+      "topic": "UNION и операции с наборами",
+      "difficulty": 2,
+      "lessonId": 20,
+      "title": "Объединение BUY и SELL",
+      "description": "Выведи trade_id и side для BUY счёта 1 и SELL счёта 2 одним UNION ALL, сортировка по ID.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT trade_id,side FROM trades WHERE account_id=1 AND side='BUY' UNION ALL SELECT trade_id,side FROM trades WHERE account_id=2 AND side='SELL' ORDER BY trade_id;",
+      "hints": [
+        "UNION ALL сохраняет обе выборки.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, UNION.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "UNION соединяет совместимые результирующие наборы и убирает повторы; UNION ALL сохраняет все совпадающие строки. Порядок задаётся в конце."
+    },
+    {
+      "id": 184,
+      "topic": "UNION и операции с наборами",
+      "difficulty": 3,
+      "lessonId": 20,
+      "title": "Повторы в UNION ALL",
+      "description": "Верни side из BUY сделок и side из SELL сделок через UNION ALL; сортировка по side.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT side FROM trades WHERE side='BUY' UNION ALL SELECT side FROM trades WHERE side='SELL' ORDER BY side;",
+      "hints": [
+        "UNION ALL не удаляет повторы.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, UNION.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "UNION соединяет совместимые результирующие наборы и убирает повторы; UNION ALL сохраняет все совпадающие строки. Порядок задаётся в конце."
+    },
+    {
+      "id": 185,
+      "topic": "UNION и операции с наборами",
+      "difficulty": 3,
+      "lessonId": 20,
+      "title": "Объединение активных инструментов",
+      "description": "Выведи instrument_id инструментов, у которых есть BUY или SELL через два SELECT и UNION, сортировка по ID.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT instrument_id FROM trades WHERE side='BUY' UNION SELECT instrument_id FROM trades WHERE side='SELL' ORDER BY instrument_id;",
+      "hints": [
+        "UNION устраняет повторные идентификаторы.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, UNION.",
+        "Нужные таблицы: trades. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "UNION соединяет совместимые результирующие наборы и убирает повторы; UNION ALL сохраняет все совпадающие строки. Порядок задаётся в конце."
+    },
+    {
+      "id": 186,
+      "topic": "UNION и операции с наборами",
+      "difficulty": 3,
+      "lessonId": 20,
+      "title": "Собрать коды классов",
+      "description": "Выведи code для equity и fx инструментов через UNION; сортировка по коду.",
+      "starter": "-- Напиши свой запрос.\nSELECT \nFROM ",
+      "expectedSql": "SELECT ticker AS code FROM instruments WHERE asset_class='equity' UNION SELECT ticker FROM instruments WHERE asset_class='fx' ORDER BY code;",
+      "hints": [
+        "Обе части возвращают один столбец.",
+        "Попробуй собрать решение из блоков: SELECT, FROM, WHERE, ORDER BY, UNION.",
+        "Нужные таблицы: instruments. Проверь выбранные столбцы, фильтры и порядок результата."
+      ],
+      "explanation": "UNION соединяет совместимые результирующие наборы и убирает повторы; UNION ALL сохраняет все совпадающие строки. Порядок задаётся в конце."
+    }
+  ]
+}
