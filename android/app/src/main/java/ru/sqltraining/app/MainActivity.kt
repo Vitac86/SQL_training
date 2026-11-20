@@ -146,7 +146,7 @@ ORDER BY ticker;""".trimIndent()
                  if (assessment.correct) completedTasks = completedTasks + chosen.id
                  history = (listOf(sql) + history.filterNot { it == sql }).take(50)
                } catch (e: Exception) {
-                 result = null; error = e.message ?: "Ошибка SQL"
+                 error = e.message ?: "Ошибка SQL"
                } finally { running = false }
              }
            }
