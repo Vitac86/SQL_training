@@ -77,7 +77,7 @@ ORDER BY ticker;""".trimIndent()
  MaterialTheme(colorScheme=darkColorScheme(primary=Green,onPrimary=Bg,background=Bg,surface=Panel,onBackground=Color(0xFFEAF0F7),onSurface=Color(0xFFEAF0F7),secondary=Muted,surfaceVariant=Color(0xFF273244))){
   Scaffold(
    containerColor=Bg,
-   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.4",color=Muted,fontSize=10.sp)}},
+   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.4.1",color=Muted,fontSize=10.sp)}},
     actions={IconButton(enabled=!running,onClick={showResetDialog=true}){Icon(Icons.Default.RestartAlt,"Сбросить учебную БД")}},
     colors=TopAppBarDefaults.topAppBarColors(containerColor=Bg))},
    bottomBar={NavigationBar(containerColor=Panel){listOf("Курс","Практика","SQL","Прогресс").forEachIndexed{i,label->
@@ -107,9 +107,10 @@ ORDER BY ticker;""".trimIndent()
      } else {
        EditorScreen(
          sql = sql,
-         onSql = { sql = it; taskFeedback = null },
+         onSql = { sql = it; taskFeedback = null; error = null },
          result = result,
          error = error,
+         onDismissError = { error = null },
          running = running,
          history = history,
          task = activeTask,
@@ -120,7 +121,7 @@ ORDER BY ticker;""".trimIndent()
            savedQueries = (listOf(query) + savedQueries.filterNot { it.name.equals(query.name, ignoreCase = true) }).take(100)
          },
          onDeleteSaved = { name -> savedQueries = savedQueries.filterNot { it.name == name } },
-         onHistory = { sql = it; taskFeedback = null },
+         onHistory = { sql = it; taskFeedback = null; error = null },
          onRun = {
            scope.launch {
              running = true; error = null; taskFeedback = null
@@ -129,7 +130,7 @@ ORDER BY ticker;""".trimIndent()
                schema = db.schema()
                history = (listOf(sql) + history.filterNot { it == sql }).take(50)
              } catch (e: Exception) {
-               result = null; error = e.message ?: "Ошибка SQL"
+               error = e.message ?: "Ошибка SQL"
              } finally { running = false }
            }
          },

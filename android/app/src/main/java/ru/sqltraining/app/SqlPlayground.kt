@@ -51,6 +51,7 @@ fun EditorScreen(
     onSql: (String) -> Unit,
     result: QueryResult?,
     error: String?,
+    onDismissError: () -> Unit,
     running: Boolean,
     history: List<String>,
     task: PracticeTask?,
@@ -171,8 +172,26 @@ fun EditorScreen(
         }
 
         if (error != null) {
-            Surface(color = Color(0xFF44252B), shape = RoundedCornerShape(10.dp)) {
-                Text(error, Modifier.fillMaxWidth().padding(12.dp), color = Color(0xFFFFB7B7), fontSize = 12.sp)
+            Surface(
+                color = Color(0xFF44252B),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        error,
+                        modifier = Modifier.weight(1f).padding(vertical = 6.dp),
+                        color = Color(0xFFFFB7B7),
+                        fontSize = 12.sp,
+                        maxLines = 5
+                    )
+                    IconButton(onClick = onDismissError, modifier = Modifier.size(36.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Закрыть ошибку", tint = Color(0xFFFFB7B7))
+                    }
+                }
             }
         } else if (result == null) {
             Text("Напиши запрос и нажми «Выполнить».", color = muted, fontSize = 12.sp)
