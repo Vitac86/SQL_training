@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "globalNotice": "SQL Server/SSMS — базовая среда десктопного курса. На телефоне выполняется SQLite, а не SQL Server. Адаптер поддерживает лишь ограниченные преобразования: TOP (n)→LIMIT n, удаление dbo., ISNULL→IFNULL, LEN→LENGTH, GETDATE/GETUTCDATE→datetime('now'), N'...'→'...', пропуск отдельных строк USE и GO. Не поддерживаются полноценные T-SQL процедуры, TRY/CATCH, уровни изоляции и строгая типизация SQL Server. Исходные примеры SSMS отмечены отдельно; запускай мобильный вариант.",
+  "lessons": [
+    {
+      "id": 0,
+      "kind": "sqlite",
+      "kindLabel": "Другая реализация в SQLite",
+      "summary": "На телефоне база встроена в приложение. Вместо SQL Server + SSMS используется SQLite; команды USE, DB_NAME() и панель Object Explorer здесь не работают.",
+      "warning": "В Android открывай «Таблицы» и выполняй SELECT напрямую. Код T-SQL в подробных примерах — для SSMS.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 1,
+      "kind": "adapter",
+      "kindLabel": "Автоматическая адаптация T-SQL",
+      "summary": "SELECT, FROM и AS имеют тот же смысл. В SSMS имя таблицы обычно пишется dbo.instruments, на телефоне — instruments. Адаптер автоматически убирает dbo.",
+      "warning": "Переносим общий SQL, но полноценного SQL Server внутри приложения нет.",
+      "serverSql": "SELECT ticker,[name] FROM dbo.instruments;",
+      "androidSql": "SELECT ticker,name FROM instruments;"
+    },
+    {
+      "id": 2,
+      "kind": "adapter",
+      "kindLabel": "Автоматическая адаптация T-SQL",
+      "summary": "T-SQL: SELECT TOP (3) ... ORDER BY ...; SQLite: SELECT ... ORDER BY ... LIMIT 3. Приложение автоматически превращает TOP (n) в LIMIT n. В настоящем SQL Server LIMIT отсутствует.",
+      "warning": "Не вводи LIMIT в SSMS; там используй TOP (n). Без ORDER BY нельзя гарантировать, какие три строки вернутся.",
+      "serverSql": "SELECT TOP (3) trade_id,price FROM dbo.trades ORDER BY price DESC,trade_id;",
+      "androidSql": "SELECT trade_id,price FROM trades ORDER BY price DESC,trade_id LIMIT 3;"
+    },
+    {
+      "id": 3,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "WHERE работает в обоих движках, но сравнение текста с учётом регистра различается. В нашей SQLite side='buy' не совпадёт с сохранённым 'BUY'; в SQL Server результат зависит от collation.",
+      "warning": "Проверяй данные через SELECT DISTINCT side FROM trades; не рассчитывай, что регистр игнорируется в любой базе.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 4,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "AND, OR, IN, BETWEEN переносятся напрямую. LIKE может по-разному учитывать регистр: это зависит от collation SQL Server и настроек SQLite.",
+      "warning": "Скобки у сложных условий и проверка реальных значений важнее поверхностного совпадения синтаксиса.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 5,
+      "kind": "same",
+      "kindLabel": "Общий синтаксис SQL",
+      "summary": "NULL, IS NULL и IS NOT NULL есть в обоих движках. В текущей учебной схеме commission объявлен NOT NULL, поэтому пропущенных комиссий нет.",
+      "warning": "Ноль строк по IS NULL не является ошибкой запроса. Это означает, что данные удовлетворяют ограничению.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 6,
+      "kind": "sqlite",
+      "kindLabel": "Другая реализация в SQLite",
+      "summary": "В SQL Server столбцы имеют строгие INT/BIGINT/DECIMAL(19,4)/DATE/NVARCHAR. На телефоне SQLite использует динамическую типизацию, NUMERIC и текстовые даты. typeof() — только SQLite; + для строк ведёт себя иначе.",
+      "warning": "Нельзя выдавать SQLite NUMERIC за эквивалент точной финансовой арифметики DECIMAL SQL Server.",
+      "serverSql": "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='trades' AND COLUMN_NAME='price';",
+      "androidSql": "SELECT typeof(price) AS price_storage_type,price FROM trades LIMIT 5;"
+    },
+    {
+      "id": 7,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "PRIMARY KEY обеспечивает уникальность в обоих движках. Однако INTEGER PRIMARY KEY в SQLite связано с rowid, а SQL Server INT PRIMARY KEY — иной механизм.",
+      "warning": "В SSMS исследуй Columns и Keys; на телефоне открой описание таблицы в приложении.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 8,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "Составной PRIMARY KEY (price_date,instrument_id) имеет ту же логическую роль. Но SQLite требует включения внешних ключей (foreign_keys=ON); приложение включает их автоматически. SQL Server проверяет их сервером.",
+      "warning": "Уникальна комбинация двух полей, а не каждое поле отдельно.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 9,
+      "kind": "sqlite",
+      "kindLabel": "Другая реализация в SQLite",
+      "summary": "CREATE TABLE и CHECK имеют общий смысл, но SQL Server DDL с dbo, DECIMAL, NVARCHAR и именованными ограничениями нельзя считать готовым SQLite-скриптом. Для осмотра схемы в Android есть sqlite_master, в SQL Server — Object Explorer и системные каталоги.",
+      "warning": "DDL из десктопного урока помечено как пример для SSMS. На Android изменение таблиц влияет на локальную учебную базу.",
+      "serverSql": "SELECT name,definition FROM sys.check_constraints WHERE parent_object_id=OBJECT_ID('dbo.trades');",
+      "androidSql": "SELECT sql FROM sqlite_master WHERE type='table' AND name='trades';"
+    },
+    {
+      "id": 10,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "Агрегаты COUNT/SUM/AVG работают и там, и там, но итоговый числовой тип и точность зависят от движка. SQLite NUMERIC не гарантирует DECIMAL арифметику SQL Server.",
+      "warning": "В финансовых расчётах отдельно проверяй округление и смысл усреднения.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 11,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "GROUP BY и HAVING есть в обоих диалектах. SQLite допускает некоторые несгруппированные поля SELECT, которые SQL Server обычно отклонит. Для переносимости включай неагрегированные колонки в GROUP BY.",
+      "warning": "WHERE отбирает строки до подсчётов, HAVING — после группировки.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 12,
+      "kind": "adapter",
+      "kindLabel": "Автоматическая адаптация T-SQL",
+      "summary": "JOIN и ON работают в обоих движках. Префикс dbo. из T-SQL наш тренажёр убирает автоматически при выполнении запроса.",
+      "warning": "Соединения по неполному ключу могут размножать строки вне зависимости от движка.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 13,
+      "kind": "same",
+      "kindLabel": "Общий синтаксис SQL",
+      "summary": "LEFT JOIN и поиск отсутствующих совпадений имеют ту же SQL-логику. SQLite выполняет запрос локально, SQL Server — на сервере.",
+      "warning": "COUNT(*) после LEFT JOIN может дать 1 при пустой правой части, поэтому используй COUNT(t.trade_id).",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 14,
+      "kind": "same",
+      "kindLabel": "Общий синтаксис SQL",
+      "summary": "Подзапросы и EXISTS доступны и там, и там. Планы выполнения и правила некоторых типов могут различаться, но учебная логика совпадает.",
+      "warning": "Подзапросы с несколькими строками не следует использовать там, где ожидается одно скалярное значение.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 15,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "CTE через WITH доступен в обоих движках. Отличаются способы оптимизации, а у рекурсивных CTE — детали синтаксиса и ограничения.",
+      "warning": "CTE — шаг внутри одного запроса, а не сохраняемая таблица.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 16,
+      "kind": "same",
+      "kindLabel": "Общий синтаксис SQL",
+      "summary": "CASE WHEN THEN ELSE END доступен и в SQL Server, и в SQLite. Тип итогового значения может преобразовываться по разным правилам.",
+      "warning": "В SELECT CASE не меняет данные таблицы. ELSE защищает от непредусмотренных значений.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 17,
+      "kind": "sqlite",
+      "kindLabel": "Другая реализация в SQLite",
+      "summary": "В SQL Server trade_date имеет тип DATE, есть DATEADD, DATEDIFF и CONVERT. В Android учебные даты хранятся как текст YYYY-MM-DD. SQLite использует date()/strftime() и строковые сравнения в ISO-формате; это не та же система типов.",
+      "warning": "Приложение не переписывает SQL Server DATEADD/DATEDIFF автоматически. Следи за форматом, часовыми поясами и границами интервалов.",
+      "serverSql": "SELECT DATEADD(day,1,CAST('2024-01-09' AS date)) AS next_date;",
+      "androidSql": "SELECT date('2024-01-09','+1 day') AS next_date;"
+    },
+    {
+      "id": 18,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "Оконные ROW_NUMBER/OVER появились в SQLite 3.25.0. Системная версия SQLite на старом Android может быть ниже, даже если SQL правильный. В SQL Server эти функции доступны на сервере.",
+      "warning": "При ошибке из-за версии движка нужно обновить Android или выполнять пример в SSMS; адаптер не эмулирует оконные функции.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 19,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "LAG/LEAD и оконные SUM работают в SQLite 3.25.0+, но могут отсутствовать на старых Android. Функции не преобразуются в альтернативные алгоритмы — приложение передаёт их SQLite.",
+      "warning": "Предыдущее наблюдение не обязательно соответствует предыдущему календарному дню.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 20,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "UNION/UNION ALL есть в обоих движках. Правила совместимости типов и отдельных ORDER BY могут различаться. Это дополнительная тема мобильной программы, не отдельный урок десктопного курса.",
+      "warning": "UNION убирает дубли; UNION ALL сохраняет их. JOIN здесь не нужен.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 21,
+      "kind": "sqlite",
+      "kindLabel": "Другая реализация в SQLite",
+      "summary": "В SQL Server CREATE OR ALTER VIEW dbo.name и GO — привычные конструкции SSMS. SQLite принимает CREATE VIEW name AS, но не CREATE OR ALTER VIEW. Представление создаётся внутри локальной базы Android.",
+      "warning": "Пример с CREATE VIEW изменяет схему локальной БД; кнопка «Попробовать» лишь переносит SQL в редактор, не исполняет его.",
+      "serverSql": "CREATE OR ALTER VIEW dbo.v_test AS SELECT trade_id FROM dbo.trades;",
+      "androidSql": "CREATE VIEW v_test AS SELECT trade_id FROM trades;"
+    },
+    {
+      "id": 22,
+      "kind": "sqlite",
+      "kindLabel": "Другая реализация в SQLite",
+      "summary": "Планы исполнения и индексы в SQL Server смотри через SSMS (Actual Execution Plan, STATISTICS IO). SQLite использует EXPLAIN QUERY PLAN и собственный оптимизатор. Создание индекса меняет локальную базу.",
+      "warning": "Индекс, сделанный в SQLite, не воспроизводит стратегию SQL Server. Практика по настоящим планам — в SSMS.",
+      "serverSql": "SET STATISTICS IO ON; SELECT * FROM dbo.trades WHERE account_id=1;",
+      "androidSql": "EXPLAIN QUERY PLAN SELECT * FROM trades WHERE account_id=1;"
+    },
+    {
+      "id": 23,
+      "kind": "sqlite",
+      "kindLabel": "Другая реализация в SQLite",
+      "summary": "SQL Server поддерживает T-SQL TRY/CATCH и развитые уровни изоляции. Android-приложение исполняет команды BEGIN/COMMIT/ROLLBACK на SQLite через специальную логику; TRY/CATCH и блокировки SQL Server здесь не моделируются.",
+      "warning": "Перед запуском пробного UPDATE проверь наличие ROLLBACK. Незавершённую транзакцию приложение само откатывает — это поведение тренажёра, не универсальное правило SQL Server.",
+      "serverSql": "BEGIN TRANSACTION; UPDATE dbo.accounts SET risk_limit_rub=risk_limit_rub+100 WHERE account_id=6; ROLLBACK TRANSACTION;",
+      "androidSql": "BEGIN; UPDATE accounts SET risk_limit_rub=risk_limit_rub+100 WHERE account_id=6; ROLLBACK;"
+    },
+    {
+      "id": 24,
+      "kind": "same",
+      "kindLabel": "Общий синтаксис SQL",
+      "summary": "JOIN+GROUP BY общие для обоих движков. Сходство SQL-синтаксиса не доказывает корректность бизнес-логики отчёта: проверь кратность связей и «зерно» результата.",
+      "warning": "Одна строка отчёта должна описывать ровно один заранее определённый объект или период.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 25,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "quantity*price — условная стоимость. Для настоящего рублёвого оборота необходимы спецификация, валюта, номинал, лотность и множитель инструмента. SQLite NUMERIC отличается от DECIMAL SQL Server.",
+      "warning": "Не складывай условные величины разных видов активов в общий оборот RUB.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 26,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "BUY со знаком минус и SELL со знаком плюс для потока — учебная договорённость. Для позиций требуются начальные остатки, движения и корпоративные действия; для денег — валюта, комиссии и НКД.",
+      "warning": "Это не расчёт депозитарного остатка или окончательной суммы расчёта.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 27,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "AVG(price) и взвешенная цена по объёму различаются. И SQLite, и SQL Server могут вычислять обе, но по-разному обрабатывают дробные числа и округление.",
+      "warning": "Для VWAP выбирай один инструмент и дели через NULLIF(SUM(quantity),0).",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 28,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "LAG(close_price) требует PARTITION BY instrument_id, иначе можно взять цену другого инструмента. Даты на телефоне текстовые ISO, а в SQL Server — DATE; на старом Android версия SQLite может не поддерживать LAG.",
+      "warning": "Пропущенный календарный день — не обязательно пропущенная цена: это может быть выходной.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 29,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "bid_ask_spread_bps — дневной синтетический показатель, а не спред именно в момент исполнения. JOIN со сделками должен учитывать и инструмент, и дату.",
+      "warning": "1 bps=0,01%; не приравнивай дневной спред к фактической стоимости исполнения.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 30,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "Комиссия в bps = 10000×fees/turnover, если числитель и знаменатель совместимы по валюте и правилам расчёта. Цена облигаций может быть процентом номинала, есть НКД, у срочных инструментов множитель.",
+      "warning": "Избегай общего SUM(quantity*price) по разнородным инструментам без экономической нормализации.",
+      "serverSql": "",
+      "androidSql": ""
+    },
+    {
+      "id": 31,
+      "kind": "different",
+      "kindLabel": "Поведение движков отличается",
+      "summary": "Дневной GROUP BY account_id,trade_date имеет ту же учебную структуру. Но в Android даты хранятся как ISO-текст, а в SQL Server — DATE; обработка таймзон и времени требует иных типов и функций.",
+      "warning": "Одну строку результата определяй как один счёт за один день.",
+      "serverSql": "",
+      "androidSql": ""
+    }
+  ]
+}

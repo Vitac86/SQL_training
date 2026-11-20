@@ -55,6 +55,7 @@ fun EditorScreen(
     running: Boolean,
     history: List<String>,
     task: PracticeTask?,
+    lessonSyntax: LessonSyntax?,
     feedback: String?,
     onDismissFeedback: () -> Unit,
     schema: List<DatabaseObject>,
@@ -155,6 +156,11 @@ fun EditorScreen(
                         fontSize = 12.sp,
                         maxLines = if (taskExpanded) Int.MAX_VALUE else 2
                     )
+                    Text(
+                        "Движок проверки: SQLite · синтаксис и отличия — в уроке ${task.lessonId + 1}",
+                        color = muted,
+                        fontSize = 11.sp
+                    )
                     if (taskExpanded) {
                         TextButton(
                             onClick = onTaskLesson,
@@ -165,6 +171,27 @@ fun EditorScreen(
                     }
                     if (taskExpanded) {
                         Text(task.topic, color = accent, fontSize = 11.sp, modifier = Modifier.padding(top = 5.dp))
+                        if (lessonSyntax != null) {
+                            Surface(
+                                color = Color(0xFF293242),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(Modifier.padding(9.dp)) {
+                                    Text(
+                                        "Среда: SQLite · ${lessonSyntax.kindLabel}",
+                                        color = Color(0xFFFFD28A),
+                                        fontSize = 11.sp
+                                    )
+                                    Text(lessonSyntax.summary, fontSize = 11.sp, color = muted)
+                                    Text(
+                                        "Подробнее: «Повторить урок ${task.lessonId + 1}».",
+                                        fontSize = 11.sp,
+                                        color = accent
+                                    )
+                                }
+                            }
+                        }
                         if (task.expectedSql.contains("LIMIT ", ignoreCase = true)) {
                             Text(
                                 "Ограничение строк: TOP (n) — после SELECT в SQL Server; " +

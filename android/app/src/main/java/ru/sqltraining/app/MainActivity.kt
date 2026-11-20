@@ -68,6 +68,7 @@ ORDER BY ticker;""".trimIndent()
  val context = LocalContext.current
  val practiceTasks = remember(context) { PracticeCatalog.load(context) }
  val lessonGuides = remember(context) { LessonGuides.load(context) }
+ val courseContent = remember(context) { CourseContentStore.load(context) }
  val scope= rememberCoroutineScope()
  val imeOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
@@ -102,7 +103,7 @@ ORDER BY ticker;""".trimIndent()
  MaterialTheme(colorScheme=darkColorScheme(primary=Green,onPrimary=Bg,background=Bg,surface=Panel,onBackground=Color(0xFFEAF0F7),onSurface=Color(0xFFEAF0F7),secondary=Muted,surfaceVariant=Color(0xFF273244))){
   Scaffold(
    containerColor=Bg,
-   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.6.0",color=Muted,fontSize=10.sp)}},
+   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.7.0",color=Muted,fontSize=10.sp)}},
     actions={
         TextButton(onClick={showGithubUpdates=true}) {
             Icon(Icons.Default.SystemUpdate,contentDescription=null,modifier=Modifier.size(18.dp))
@@ -163,11 +164,14 @@ ORDER BY ticker;""".trimIndent()
        LessonScreen(
          lesson = selectedLesson!!,
          guide = lessonGuides[selectedLesson!!.id],
+         detail = courseContent.detail[selectedLesson!!.id],
+         dialect = courseContent.syntax[selectedLesson!!.id],
+         globalNotice = courseContent.globalNotice,
          practiceCount = practiceTasks.count { it.lessonId == selectedLesson!!.id },
          onBack = { selectedLesson = null },
-         onTry = {
+         onTry = { example ->
            activeTask?.let { t -> taskDrafts = taskDrafts + (t.id to sql) }
-           sql = selectedLesson!!.example
+           sql = example
            selectedLesson = null
            activeTask = null
            taskFeedback = null
@@ -196,6 +200,7 @@ ORDER BY ticker;""".trimIndent()
          running = running,
          history = history,
          task = activeTask,
+         lessonSyntax = activeTask?.let { courseContent.syntax[it.lessonId] },
          feedback = taskFeedback,
          onDismissFeedback = { taskFeedback = null },
          schema = schema,
@@ -361,72 +366,143 @@ fun CourseScreen(
 fun LessonScreen(
     lesson: Lesson,
     guide: LessonGuide?,
+    detail: DetailedLesson?,
+    dialect: LessonSyntax?,
+    globalNotice: String,
     practiceCount: Int,
     onBack: () -> Unit,
-    onTry: () -> Unit,
+    onTry: (String) -> Unit,
     onPractice: () -> Unit,
     onDone: () -> Unit
 ) {
     var showAnswer by remember(lesson.id) { mutableStateOf(false) }
+    var showFullMaterial by remember(lesson.id) { mutableStateOf(true) }
+    val androidExample = dialect?.androidSql?.takeIf { it.isNotBlank() } ?: lesson.example
+    val modifiesData = Regex("""(?i)^\s*(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|BEGIN)\b""")
+        .containsMatchIn(androidExample)
+
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(13.dp)
     ) {
         TextButton(onClick = onBack) { Text("← К программе") }
-        Text(lesson.title, style = MaterialTheme.typography.headlineSmall)
+        Text("Урок ${lesson.id + 1} · ${lesson.title}", style = MaterialTheme.typography.headlineSmall)
         Text(lesson.level.uppercase(), color = Green, fontSize = 12.sp)
         Text(lesson.description, style = MaterialTheme.typography.bodyLarge)
 
-        if (guide != null) {
-            Text("Что это означает", style = MaterialTheme.typography.titleMedium)
-            Text(guide.what)
-            Text("Зачем это нужно", style = MaterialTheme.typography.titleMedium)
-            Text(guide.why)
-            Text("Разберём по шагам", style = MaterialTheme.typography.titleMedium)
-            guide.steps.forEachIndexed { index, step ->
-                Text("${index + 1}. $step", style = MaterialTheme.typography.bodyMedium)
+        Surface(color = Color(0xFF293242), shape = RoundedCornerShape(12.dp)) {
+            Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Text("Среда выполнения и диалект SQL", style = MaterialTheme.typography.titleMedium)
+                Text("Десктоп: SQL Server + SSMS  |  Телефон: SQLite + частичный адаптер T-SQL", color = Color(0xFFFFD28A), fontSize = 12.sp)
+                Text(globalNotice, fontSize = 12.sp)
+                if (dialect != null) {
+                    Text(dialect.kindLabel, color = Green, style = MaterialTheme.typography.titleSmall)
+                    Text(dialect.summary, style = MaterialTheme.typography.bodyMedium)
+                    Text("Важно: ${dialect.warning}", fontSize = 12.sp, color = Color(0xFFFFD28A))
+                }
             }
-            Surface(color = Color(0xFF293242), shape = RoundedCornerShape(12.dp)) {
+        }
+        if (dialect != null && dialect.serverSql.isNotBlank()) {
+            Text("Как пишется в SQL Server / SSMS", style = MaterialTheme.typography.titleMedium)
+            Surface(color = Panel, shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("На что обратить внимание", color = Color(0xFFFFD28A), fontSize = 12.sp)
-                    Spacer(Modifier.height(4.dp))
-                    Text(guide.pitfall, style = MaterialTheme.typography.bodyMedium)
+                    Text("T-SQL · пример для десктопа; не для непосредственного выполнения в SQLite", color = Color(0xFFFFD28A), fontSize = 11.sp)
+                    Spacer(Modifier.height(7.dp))
+                    Text(
+                        dialect.serverSql,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        modifier = Modifier.horizontalScroll(rememberScrollState())
+                    )
                 }
             }
         }
 
-        Text("Пример запроса", style = MaterialTheme.typography.titleMedium)
+        if (guide != null) {
+            Text("Что означает эта тема", style = MaterialTheme.typography.titleMedium)
+            Text(guide.what)
+            Text("Практический смысл", style = MaterialTheme.typography.titleMedium)
+            Text(guide.why)
+            Text("Разбор по шагам", style = MaterialTheme.typography.titleMedium)
+            guide.steps.forEachIndexed { index, step ->
+                Text("${index + 1}. $step", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+
+        if (detail != null) {
+            Text("Развёрнутый урок", style = MaterialTheme.typography.titleLarge)
+            Text(
+                "${detail.sections.size} разделов на основе десктопного курса. " +
+                    "Нумерация уроков в источнике относится к десктопной программе. " +
+                    "Исходные примеры в разделах помечены как T-SQL / SQL Server. " +
+                    "Материалы доступны без интернета.",
+                color = Muted, fontSize = 12.sp
+            )
+            OutlinedButton(
+                onClick = { showFullMaterial = !showFullMaterial },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (showFullMaterial) "Свернуть подробный материал" else "Читать подробный материал")
+            }
+            if (showFullMaterial) LessonReadingSections(detail)
+        }
+
+        Text("Пример для Android-тренажёра", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Этот SQL будет перенесён в редактор без выполнения. " +
+                if (modifiesData) "Обрати внимание: после ручного запуска он может изменить локальную БД."
+                else "Кнопка «Выполнить» запустит его на SQLite.",
+            fontSize = 12.sp,
+            color = if (modifiesData) Color(0xFFFFD28A) else Muted
+        )
         Surface(color = Panel, shape = RoundedCornerShape(12.dp)) {
             Text(
-                lesson.example,
-                Modifier.fillMaxWidth().padding(14.dp),
+                androidExample,
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(14.dp),
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp
             )
         }
+        Button(onClick = { onTry(androidExample) }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.PlayArrow, null)
+            Spacer(Modifier.width(8.dp))
+            Text("Открыть пример SQLite в редакторе")
+        }
+        if (dialect?.kind == "adapter" && lesson.example.trim() != androidExample.trim()) {
+            OutlinedButton(onClick = { onTry(lesson.example) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Попробовать T-SQL через адаптер")
+            }
+            Text(
+                "Второй вариант работает только с ограниченным набором преобразований. " +
+                    "Он не запускает Microsoft SQL Server.",
+                color = Muted,
+                fontSize = 11.sp
+            )
+        }
         if (guide != null) {
-            Text("Проверь понимание", style = MaterialTheme.typography.titleMedium)
+            Surface(color = Color(0xFF293242), shape = RoundedCornerShape(12.dp)) {
+                Column(Modifier.padding(12.dp)) {
+                    Text("Частая ошибка", color = Color(0xFFFFD28A), fontSize = 12.sp)
+                    Spacer(Modifier.height(4.dp))
+                    Text(guide.pitfall)
+                }
+            }
+            Text("Проверка понимания", style = MaterialTheme.typography.titleMedium)
             Text(guide.question)
             OutlinedButton(onClick = { showAnswer = !showAnswer }) {
                 Text(if (showAnswer) "Скрыть объяснение" else "Показать объяснение")
             }
             if (showAnswer) Text(guide.answer, color = Green)
         }
-
-        Button(onClick = onTry, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.PlayArrow, null)
-            Spacer(Modifier.width(8.dp))
-            Text("Попробовать запрос")
-        }
         if (practiceCount > 0) {
             OutlinedButton(onClick = onPractice, modifier = Modifier.fillMaxWidth()) {
-                Text("Тренировка по теме ($practiceCount задач)")
+                Text("Задачи по уроку ($practiceCount)")
             }
         }
         OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-            Text("Отметить тему изученной")
+            Text("Отметить теорию изученной")
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
     }
 }
 
