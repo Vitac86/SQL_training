@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,6 +57,7 @@ ORDER BY ticker;""".trimIndent()
  var schema by remember { mutableStateOf(emptyList<DatabaseObject>()) }
  var savedQueries by remember { mutableStateOf(SavedQueryStore.load(prefs)) }
  var showResetDialog by remember { mutableStateOf(false) }
+ var showSettingsMenu by remember { mutableStateOf(false) }
  var showGithubUpdates by remember { mutableStateOf(false) }
  var selectedLesson by remember{mutableStateOf<Lesson?>(null)}
  var activeTask by remember{mutableStateOf<PracticeTask?>(null)}
@@ -64,6 +66,7 @@ ORDER BY ticker;""".trimIndent()
  val practiceTasks = remember(context) { PracticeCatalog.load(context) }
  val lessonGuides = remember(context) { LessonGuides.load(context) }
  val scope= rememberCoroutineScope()
+ val imeOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
  LaunchedEffect(completed){prefs.edit().putStringSet("completed",completed.map{it.toString()}.toSet()).apply()}
  LaunchedEffect(completedTasks){prefs.edit().putStringSet("completed_tasks",completedTasks.map{it.toString()}.toSet()).apply()}
@@ -78,21 +81,45 @@ ORDER BY ticker;""".trimIndent()
  MaterialTheme(colorScheme=darkColorScheme(primary=Green,onPrimary=Bg,background=Bg,surface=Panel,onBackground=Color(0xFFEAF0F7),onSurface=Color(0xFFEAF0F7),secondary=Muted,surfaceVariant=Color(0xFF273244))){
   Scaffold(
    containerColor=Bg,
-   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.5.0",color=Muted,fontSize=10.sp)}},
+   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.5.1",color=Muted,fontSize=10.sp)}},
     actions={
         TextButton(onClick={showGithubUpdates=true}) {
             Icon(Icons.Default.SystemUpdate,contentDescription=null,modifier=Modifier.size(18.dp))
             Spacer(Modifier.width(4.dp))
             Text("Обновить",fontSize=12.sp)
         }
-        IconButton(enabled=!running,onClick={showResetDialog=true}) {
-            Icon(Icons.Default.RestartAlt,"Сбросить учебную БД")
+        Box {
+            IconButton(onClick={showSettingsMenu=true}) {
+                Icon(Icons.Default.MoreVert,"Настройки")
+            }
+            DropdownMenu(
+                expanded=showSettingsMenu,
+                onDismissRequest={showSettingsMenu=false}
+            ) {
+                DropdownMenuItem(
+                    text={Text("Сбросить учебную БД")},
+                    onClick={showSettingsMenu=false;showResetDialog=true},
+                    enabled=!running,
+                    leadingIcon={Icon(Icons.Default.DeleteOutline,null)}
+                )
+            }
         }
     },
     colors=TopAppBarDefaults.topAppBarColors(containerColor=Bg))},
-   bottomBar={NavigationBar(containerColor=Panel){listOf("Курс","Практика","SQL","Прогресс").forEachIndexed{i,label->
-    NavigationBarItem(selected=tab==i,onClick={tab=i;selectedLesson=null},icon={Icon(listOf(Icons.Default.School,Icons.Default.FitnessCenter,Icons.Default.Code,Icons.Default.Insights)[i],label)},label={Text(label)})
-   }}}
+   bottomBar={
+       if (!imeOpen) {
+         NavigationBar(containerColor=Panel){
+           listOf("Курс","Практика","SQL","Прогресс").forEachIndexed { i,label ->
+             NavigationBarItem(
+               selected=tab==i,
+               onClick={tab=i;selectedLesson=null},
+               icon={Icon(listOf(Icons.Default.School,Icons.Default.FitnessCenter,Icons.Default.Code,Icons.Default.Insights)[i],label)},
+               label={Text(label)}
+             )
+           }
+         }
+       }
+   }
   ){padding->Box(Modifier.fillMaxSize().padding(padding)){
    when(tab){
     0->CourseScreen(completed,onOpen={selectedLesson=it;tab=2},onDone={completed=completed+it.id})
@@ -125,6 +152,7 @@ ORDER BY ticker;""".trimIndent()
          history = history,
          task = activeTask,
          feedback = taskFeedback,
+         onDismissFeedback = { taskFeedback = null },
          schema = schema,
          savedQueries = savedQueries,
          onSave = { query ->

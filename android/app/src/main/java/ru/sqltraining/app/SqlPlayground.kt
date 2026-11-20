@@ -56,6 +56,7 @@ fun EditorScreen(
     history: List<String>,
     task: PracticeTask?,
     feedback: String?,
+    onDismissFeedback: () -> Unit,
     schema: List<DatabaseObject>,
     savedQueries: List<SavedQuery>,
     onSave: (SavedQuery) -> Unit,
@@ -73,100 +74,167 @@ fun EditorScreen(
     var hintStep by remember(task?.id) { mutableIntStateOf(0) }
     var showSolution by remember(task?.id) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
+    var taskExpanded by remember(task?.id) { mutableStateOf(false) }
+    var editorLarge by remember { mutableStateOf(false) }
+    var resultExpanded by remember { mutableStateOf(false) }
+    LaunchedEffect(result) {
+        if (result != null) resultExpanded = true
+    }
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 7.dp)) {
+    // The workspace scrolls as a whole. Fixed editor height is independent
+    // of the length of the assignment, feedback and result.
+    Column(
+        Modifier.fillMaxSize()
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("SQL Playground", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-            Text("OFFLINE", color = accent, fontSize = 11.sp)
+            Text("SQLite · офлайн", color = accent, fontSize = 11.sp)
         }
-        Text("SQLite с частичной адаптацией T-SQL — все запросы исполняются на телефоне", color = muted, fontSize = 10.sp)
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            TextButton(onClick = { showSchema = true }) { Icon(Icons.Default.AccountTree, null, Modifier.size(15.dp)); Text("Таблицы", fontSize = 11.sp) }
-            TextButton(onClick = { saveName = ""; showSave = true }) { Icon(Icons.Default.BookmarkAdd, null, Modifier.size(15.dp)); Text("Сохранить", fontSize = 11.sp) }
-            TextButton(onClick = { showSaved = true }) { Icon(Icons.Default.FolderOpen, null, Modifier.size(15.dp)); Text("Мои SQL", fontSize = 11.sp) }
-            TextButton(onClick = { showHistory = true }) { Icon(Icons.Default.History, null, Modifier.size(15.dp)); Text("История", fontSize = 11.sp) }
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            TextButton(onClick = { showSchema = true }) {
+                Icon(Icons.Default.AccountTree, null, Modifier.size(16.dp)); Text("Таблицы", fontSize = 12.sp)
+            }
+            TextButton(onClick = { saveName = ""; showSave = true }) {
+                Icon(Icons.Default.BookmarkAdd, null, Modifier.size(16.dp)); Text("Сохранить", fontSize = 12.sp)
+            }
+            TextButton(onClick = { showSaved = true }) {
+                Icon(Icons.Default.FolderOpen, null, Modifier.size(16.dp)); Text("Мои SQL", fontSize = 12.sp)
+            }
+            TextButton(onClick = { showHistory = true }) {
+                Icon(Icons.Default.History, null, Modifier.size(16.dp)); Text("История", fontSize = 12.sp)
+            }
         }
 
         if (task != null) {
             Surface(
                 color = Color(0xFF20372F),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState())
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        "ЗАДАНИЕ #${task.id} · ${task.topic} · ${task.difficultyName}",
-                        color = accent,
-                        fontSize = 11.sp
-                    )
-                    Text(task.title, style = MaterialTheme.typography.titleSmall)
-                    Text(task.description, fontSize = 12.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(
-                            onClick = { if (hintStep < task.hints.size) hintStep++ },
-                            enabled = hintStep < task.hints.size,
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text("Подсказка $hintStep/3", fontSize = 11.sp)
+                Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "ЗАДАНИЕ #${task.id} · ${task.difficultyName}",
+                                color = accent,
+                                fontSize = 11.sp
+                            )
+                            Text(task.title, style = MaterialTheme.typography.titleSmall)
                         }
-                        if (hintStep >= task.hints.size) {
-                            TextButton(
-                                onClick = { showSolution = true },
-                                contentPadding = PaddingValues(0.dp)
-                            ) { Text("Показать решение", fontSize = 11.sp) }
+                        TextButton(onClick = { taskExpanded = !taskExpanded }) {
+                            Icon(
+                                if (taskExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                modifier = Modifier.size(19.dp)
+                            )
+                            Text(if (taskExpanded) "Свернуть" else "Условие", fontSize = 12.sp)
                         }
                     }
-                    task.hints.take(hintStep).forEachIndexed { index, hint ->
-                        Text("${index + 1}. $hint", color = muted, fontSize = 11.sp)
+                    Text(
+                        task.description,
+                        fontSize = 12.sp,
+                        maxLines = if (taskExpanded) Int.MAX_VALUE else 2
+                    )
+                    if (taskExpanded) {
+                        Text(task.topic, color = accent, fontSize = 11.sp, modifier = Modifier.padding(top = 5.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(
+                                onClick = { if (hintStep < task.hints.size) hintStep++ },
+                                enabled = hintStep < task.hints.size,
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text("Подсказка $hintStep/3", fontSize = 12.sp)
+                            }
+                            if (hintStep >= task.hints.size) {
+                                TextButton(
+                                    onClick = { showSolution = true },
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text("Решение", fontSize = 12.sp)
+                                }
+                            }
+                        }
+                        task.hints.take(hintStep).forEachIndexed { index, hint ->
+                            Text("${index + 1}. $hint", color = muted, fontSize = 12.sp)
+                        }
                     }
                 }
             }
         }
-        Spacer(Modifier.height(6.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Редактор SQL", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            TextButton(onClick = { editorLarge = !editorLarge }) {
+                Icon(
+                    if (editorLarge) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                    null, Modifier.size(18.dp)
+                )
+                Text(if (editorLarge) "Обычный" else "Увеличить", fontSize = 12.sp)
+            }
+        }
         Surface(
             color = panel,
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.weight(0.52f).fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(if (editorLarge) 490.dp else 300.dp)
         ) {
             SqlEditorField(sql = sql, schema = schema, onSql = onSql, modifier = Modifier.fillMaxSize())
         }
-        Spacer(Modifier.height(7.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Button(onClick = onRun, enabled = !running, modifier = Modifier.weight(1f)) {
                 if (running) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                 else Icon(Icons.Default.PlayArrow, null, Modifier.size(19.dp))
                 Spacer(Modifier.width(4.dp))
                 Text("Выполнить")
             }
-            if (task != null) OutlinedButton(onClick = onCheck, enabled = !running) {
-                Icon(Icons.Default.FactCheck, null, Modifier.size(17.dp))
-                Spacer(Modifier.width(4.dp))
-                Text("Проверить")
+            if (task != null) {
+                OutlinedButton(onClick = onCheck, enabled = !running) {
+                    Icon(Icons.Default.FactCheck, null, Modifier.size(17.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Проверить")
+                }
             }
         }
 
-        if (feedback != null) Text(
-            feedback,
-            color = if (feedback.startsWith("Верно")) accent else Color(0xFFFFC66D),
-            fontSize = 12.sp,
-            modifier = Modifier.padding(vertical = 5.dp)
-        )
-        if (feedback != null && feedback.startsWith("Верно") && task != null) {
-            Text(task.explanation, fontSize = 12.sp, color = muted)
-            TextButton(onClick = onNextTask) { Text("Следующая задача по теме") }
-        }
-
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Результат", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            if (result != null && result.columns.isNotEmpty()) {
-                TextButton(onClick = { clipboard.setText(AnnotatedString(resultToTsv(result))) }) {
-                    Icon(Icons.Default.ContentCopy, null, Modifier.size(15.dp))
-                    Text("Копировать", fontSize = 11.sp)
+        if (feedback != null) {
+            Surface(
+                color = if (feedback.startsWith("Верно")) Color(0xFF20372F) else Color(0xFF382F1E),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp)) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Text(
+                            feedback,
+                            modifier = Modifier.weight(1f).padding(vertical = 6.dp),
+                            color = if (feedback.startsWith("Верно")) accent else Color(0xFFFFC66D),
+                            fontSize = 12.sp
+                        )
+                        IconButton(onClick = onDismissFeedback, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Закрыть результат проверки",
+                                tint = muted
+                            )
+                        }
+                    }
+                    if (feedback.startsWith("Верно") && task != null) {
+                        Text(task.explanation, color = muted, fontSize = 12.sp)
+                        TextButton(onClick = onNextTask) {
+                            Text("Следующая задача по теме", fontSize = 12.sp)
+                        }
+                    }
                 }
             }
         }
@@ -193,18 +261,39 @@ fun EditorScreen(
                     }
                 }
             }
-        } else if (result == null) {
+        }
+
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Результат", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            if (result != null && result.columns.isNotEmpty()) {
+                TextButton(onClick = { clipboard.setText(AnnotatedString(resultToTsv(result))) }) {
+                    Icon(Icons.Default.ContentCopy, null, Modifier.size(15.dp))
+                    Text("Копировать", fontSize = 11.sp)
+                }
+            }
+            if (result != null) {
+                TextButton(onClick = { resultExpanded = !resultExpanded }) {
+                    Icon(
+                        if (resultExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        null, Modifier.size(17.dp)
+                    )
+                    Text(if (resultExpanded) "Скрыть" else "Показать", fontSize = 12.sp)
+                }
+            }
+        }
+        if (result == null) {
             Text("Напиши запрос и нажми «Выполнить».", color = muted, fontSize = 12.sp)
         } else {
             Text(
                 "${result.message} · ${result.elapsedMs} мс · команд: ${result.statementsExecuted}",
-                color = muted, fontSize = 11.sp
+                color = muted,
+                fontSize = 11.sp
             )
-            if (result.columns.isNotEmpty()) {
-                Spacer(Modifier.height(4.dp))
-                ResultGrid(result, modifier = Modifier.fillMaxWidth().weight(0.48f))
+            if (resultExpanded && result.columns.isNotEmpty()) {
+                ResultGrid(result, modifier = Modifier.fillMaxWidth().height(220.dp))
             }
         }
+        Spacer(Modifier.height(12.dp))
     }
 
     if (showSolution && task != null) {
