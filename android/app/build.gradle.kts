@@ -12,8 +12,8 @@ android {
         applicationId = "ru.sqltraining.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.4.1"
+        versionCode = 6
+        versionName = "0.5.0"
     }
 
     compileOptions {
@@ -21,6 +21,21 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+
+    val releaseKeyFile = System.getenv("ANDROID_SIGNING_STORE_FILE")
+    val releasePassword = System.getenv("ANDROID_SIGNING_PASSWORD")
+    if (!releaseKeyFile.isNullOrBlank() && !releasePassword.isNullOrBlank()) {
+        signingConfigs {
+            create("releaseUpload") {
+                storeFile = file(releaseKeyFile)
+                storePassword = releasePassword
+                keyAlias = "sqltrainer"
+                keyPassword = releasePassword
+            }
+        }
+        buildTypes.getByName("release").signingConfig = signingConfigs.getByName("releaseUpload")
+    }
+
     buildFeatures { compose = true }
 }
 

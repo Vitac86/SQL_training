@@ -56,6 +56,7 @@ ORDER BY ticker;""".trimIndent()
  var schema by remember { mutableStateOf(emptyList<DatabaseObject>()) }
  var savedQueries by remember { mutableStateOf(SavedQueryStore.load(prefs)) }
  var showResetDialog by remember { mutableStateOf(false) }
+ var showGithubUpdates by remember { mutableStateOf(false) }
  var selectedLesson by remember{mutableStateOf<Lesson?>(null)}
  var activeTask by remember{mutableStateOf<PracticeTask?>(null)}
  var taskFeedback by remember{mutableStateOf<String?>(null)}
@@ -77,8 +78,15 @@ ORDER BY ticker;""".trimIndent()
  MaterialTheme(colorScheme=darkColorScheme(primary=Green,onPrimary=Bg,background=Bg,surface=Panel,onBackground=Color(0xFFEAF0F7),onSurface=Color(0xFFEAF0F7),secondary=Muted,surfaceVariant=Color(0xFF273244))){
   Scaffold(
    containerColor=Bg,
-   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.4.1",color=Muted,fontSize=10.sp)}},
-    actions={IconButton(enabled=!running,onClick={showResetDialog=true}){Icon(Icons.Default.RestartAlt,"Сбросить учебную БД")}},
+   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.5.0",color=Muted,fontSize=10.sp)}},
+    actions={
+        IconButton(onClick={showGithubUpdates=true}) {
+            Icon(Icons.Default.SystemUpdate,"Проверить обновления через GitHub")
+        }
+        IconButton(enabled=!running,onClick={showResetDialog=true}) {
+            Icon(Icons.Default.RestartAlt,"Сбросить учебную БД")
+        }
+    },
     colors=TopAppBarDefaults.topAppBarColors(containerColor=Bg))},
    bottomBar={NavigationBar(containerColor=Panel){listOf("Курс","Практика","SQL","Прогресс").forEachIndexed{i,label->
     NavigationBarItem(selected=tab==i,onClick={tab=i;selectedLesson=null},icon={Icon(listOf(Icons.Default.School,Icons.Default.FitnessCenter,Icons.Default.Code,Icons.Default.Insights)[i],label)},label={Text(label)})
@@ -169,6 +177,9 @@ ORDER BY ticker;""".trimIndent()
      else->ProgressScreen(completed,completedTasks,practiceTasks,history.size,{completed=emptySet();completedTasks=emptySet();history=emptyList()})
    }
   }}
+  if (showGithubUpdates) {
+    GithubUpdateDialog(onClose = { showGithubUpdates = false })
+  }
   if (showResetDialog) {
     AlertDialog(
       onDismissRequest = { showResetDialog = false },
