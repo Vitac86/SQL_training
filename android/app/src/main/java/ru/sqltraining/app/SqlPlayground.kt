@@ -55,6 +55,9 @@ fun EditorScreen(
     running: Boolean,
     history: List<String>,
     task: PracticeTask?,
+    exampleLesson: Lesson?,
+    onReturnExampleLesson: () -> Unit,
+    onStartExampleTasks: () -> Unit,
     lessonSyntax: LessonSyntax?,
     feedback: String?,
     onDismissFeedback: () -> Unit,
@@ -101,6 +104,25 @@ fun EditorScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("SQL Playground", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
             Text("SQLite · офлайн", color = accent, fontSize = 11.sp)
+        }
+
+        if (task == null && exampleLesson != null) {
+            Surface(color = Color(0xFF20372F), shape = RoundedCornerShape(11.dp)) {
+                Column(Modifier.fillMaxWidth().padding(10.dp)) {
+                    Text(
+                        "Проба запроса · урок ${exampleLesson.id + 1}: ${exampleLesson.title}",
+                        fontSize = 12.sp, color = accent
+                    )
+                    Text(
+                        "Здесь можно написать и выполнить свой SQL. Проба не засчитывает задачи.",
+                        color = muted, fontSize = 11.sp
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        TextButton(onClick = onReturnExampleLesson) { Text("К материалу", fontSize = 12.sp) }
+                        TextButton(onClick = onStartExampleTasks) { Text("К задачам", fontSize = 12.sp) }
+                    }
+                }
+            }
         }
 
         Row(
@@ -313,7 +335,7 @@ fun EditorScreen(
                     if (feedback.startsWith("Верно") && task != null) {
                         Text(task.explanation, color = muted, fontSize = 12.sp)
                         TextButton(onClick = onNextTask) {
-                            Text("Следующая задача по теме", fontSize = 12.sp)
+                            Text("Продолжить обучение →", fontSize = 12.sp)
                         }
                     }
                 }

@@ -131,7 +131,7 @@ fun PracticeScreen(
         Spacer(Modifier.height(4.dp))
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            lessons.forEach { lesson ->
+            MobileCurriculum.courseLessons().forEach { lesson ->
                 val current = grouped[lesson.id].orEmpty()
                 if (current.isNotEmpty()) {
                     val allForLesson = PracticePath.forLesson(tasks, lesson.id)
@@ -154,7 +154,7 @@ fun PracticeScreen(
                                         )
                                         Text(
                                             "Задачи: $totalSolved / ${allForLesson.size} решено" +
-                                                if (lesson.id in completedLessons) " · теория изучена" else "",
+                                                if (lesson.id in completedLessons) " · урок освоен" else "",
                                             color = muted, fontSize = 12.sp
                                         )
                                     }

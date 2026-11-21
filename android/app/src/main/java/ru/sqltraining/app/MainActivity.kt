@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
@@ -44,7 +46,7 @@ class MainActivity:ComponentActivity(){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainerApp(db:SqlDatabase,prefs:SharedPreferences){
- var tab by remember{mutableIntStateOf(2)}
+ var tab by remember{mutableIntStateOf(0)}
  val defaultSql = """SELECT ticker, name, currency
 FROM instruments
 ORDER BY ticker;""".trimIndent()
@@ -53,7 +55,6 @@ ORDER BY ticker;""".trimIndent()
  var error by remember{mutableStateOf<String?>(null)}
  var running by remember{mutableStateOf(false)}
  var history by remember{mutableStateOf(runCatching{val j=JSONArray(prefs.getString("history","[]"));(0 until j.length()).map{j.getString(it)}}.getOrDefault(emptyList()))}
- var completed by remember{mutableStateOf((prefs.getStringSet("completed",emptySet())?:emptySet()).mapNotNull{it.toIntOrNull()}.toSet())}
  var completedTasks by remember{mutableStateOf((prefs.getStringSet("completed_tasks",emptySet())?:emptySet()).mapNotNull{it.toIntOrNull()}.toSet())}
  var schema by remember { mutableStateOf(emptyList<DatabaseObject>()) }
  var savedQueries by remember { mutableStateOf(SavedQueryStore.load(prefs)) }
@@ -61,13 +62,15 @@ ORDER BY ticker;""".trimIndent()
  var showSettingsMenu by remember { mutableStateOf(false) }
  var showGithubUpdates by remember { mutableStateOf(false) }
  var selectedLesson by remember{mutableStateOf<Lesson?>(null)}
+ var exampleLessonId by remember { mutableStateOf<Int?>(null) }
  var activeTask by remember{mutableStateOf<PracticeTask?>(null)}
  var taskFeedback by remember{mutableStateOf<String?>(null)}
  var practiceFocusLessonId by remember { mutableStateOf<Int?>(null) }
  var taskDrafts by remember { mutableStateOf(PracticeDraftStore.load(prefs)) }
  val context = LocalContext.current
- val practiceTasks = remember(context) { PracticeCatalog.load(context) }
- val lessonGuides = remember(context) { LessonGuides.load(context) }
+ val allPracticeTasks = remember(context) { PracticeCatalog.load(context) }
+ val practiceTasks = remember(allPracticeTasks) { MobileCurriculum.tasks(allPracticeTasks) }
+ val completed = MobileCurriculum.masteredLessons(practiceTasks, completedTasks)
  val courseContent = remember(context) { CourseContentStore.load(context) }
  val scope= rememberCoroutineScope()
  val imeOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -75,6 +78,7 @@ ORDER BY ticker;""".trimIndent()
  fun openPracticeTask(task: PracticeTask) {
    activeTask?.let { previous -> taskDrafts = taskDrafts + (previous.id to sql) }
    activeTask = task
+   exampleLessonId = null
    sql = taskDrafts[task.id] ?: task.starter
    selectedLesson = null
    taskFeedback = null
@@ -85,7 +89,6 @@ ORDER BY ticker;""".trimIndent()
  }
 
 
- LaunchedEffect(completed){prefs.edit().putStringSet("completed",completed.map{it.toString()}.toSet()).apply()}
  LaunchedEffect(completedTasks){prefs.edit().putStringSet("completed_tasks",completedTasks.map{it.toString()}.toSet()).apply()}
  LaunchedEffect(history){prefs.edit().putString("history",JSONArray(history).toString()).apply()}
  LaunchedEffect(sql) { prefs.edit().putString("editor_sql", sql).apply() }
@@ -103,7 +106,20 @@ ORDER BY ticker;""".trimIndent()
  MaterialTheme(colorScheme=darkColorScheme(primary=Green,onPrimary=Bg,background=Bg,surface=Panel,onBackground=Color(0xFFEAF0F7),onSurface=Color(0xFFEAF0F7),secondary=Muted,surfaceVariant=Color(0xFF273244))){
   Scaffold(
    containerColor=Bg,
-   topBar={TopAppBar(title={Column{Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium);Text("OFFLINE SQL LAB • v0.7.0",color=Muted,fontSize=10.sp)}},
+   topBar={TopAppBar(title={
+      Row(verticalAlignment=Alignment.CenterVertically) {
+        Image(
+          painter=painterResource(R.drawable.sql_slime),
+          contentDescription=null,
+          modifier=Modifier.size(38.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Column {
+          Text("SQL TRAINER",style=MaterialTheme.typography.titleMedium)
+          Text("OFFLINE SQL LAB • v0.8.0",color=Muted,fontSize=10.sp)
+        }
+      }
+    },
     actions={
         TextButton(onClick={showGithubUpdates=true}) {
             Icon(Icons.Default.SystemUpdate,contentDescription=null,modifier=Modifier.size(18.dp))
@@ -148,7 +164,8 @@ ORDER BY ticker;""".trimIndent()
       done=completed,
       tasks=practiceTasks,
       taskDone=completedTasks,
-      onOpen={selectedLesson=it;tab=2},
+      onOpen={selectedLesson=it;exampleLessonId=null;tab=2},
+      onContinue={lesson->selectedLesson=lesson;exampleLessonId=null;tab=2},
       onPractice={lessonId->practiceFocusLessonId=lessonId;tab=1;selectedLesson=null}
     )
     1->PracticeScreen(
@@ -158,19 +175,19 @@ ORDER BY ticker;""".trimIndent()
       completedLessons=completed,
       focusLessonId=practiceFocusLessonId,
       onOpen={task->openPracticeTask(task)},
-      onOpenLesson={lesson->selectedLesson=lesson;tab=2}
+      onOpenLesson={lesson->selectedLesson=lesson;exampleLessonId=null;tab=2}
     )
     2 -> if (selectedLesson != null) {
        LessonScreen(
          lesson = selectedLesson!!,
-         guide = lessonGuides[selectedLesson!!.id],
          detail = courseContent.detail[selectedLesson!!.id],
          dialect = courseContent.syntax[selectedLesson!!.id],
-         globalNotice = courseContent.globalNotice,
          practiceCount = practiceTasks.count { it.lessonId == selectedLesson!!.id },
-         onBack = { selectedLesson = null },
+         completedCount = practiceTasks.count { it.lessonId == selectedLesson!!.id && it.id in completedTasks },
+         onBack = { selectedLesson = null; tab=0 },
          onTry = { example ->
            activeTask?.let { t -> taskDrafts = taskDrafts + (t.id to sql) }
+           exampleLessonId = selectedLesson!!.id
            sql = example
            selectedLesson = null
            activeTask = null
@@ -183,7 +200,12 @@ ORDER BY ticker;""".trimIndent()
            val next = forLesson.firstOrNull { it.id !in completedTasks } ?: forLesson.firstOrNull()
            if (next != null) openPracticeTask(next)
          },
-         onDone = { completed = completed + selectedLesson!!.id; selectedLesson = null }
+         onContinue = {
+           val next = MobileCurriculum.nextUnfinishedLesson(
+             selectedLesson!!.id, practiceTasks, completedTasks
+           )
+           if (next != null) selectedLesson = next else { selectedLesson = null; tab = 0 }
+         }
        )
      } else {
        EditorScreen(
@@ -200,6 +222,19 @@ ORDER BY ticker;""".trimIndent()
          running = running,
          history = history,
          task = activeTask,
+         exampleLesson = exampleLessonId?.let { id -> MobileCurriculum.courseLessons().firstOrNull { it.id == id } },
+         onReturnExampleLesson = {
+           exampleLessonId?.let { id ->
+             selectedLesson = MobileCurriculum.courseLessons().firstOrNull { it.id == id }
+           }
+         },
+         onStartExampleTasks = {
+           exampleLessonId?.let { id ->
+             val task = MobileCurriculum.nextUnsolvedTaskOfLesson(id, practiceTasks, completedTasks)
+                 ?: PracticePath.forLesson(practiceTasks,id).firstOrNull()
+             if (task != null) openPracticeTask(task)
+           }
+         },
          lessonSyntax = activeTask?.let { courseContent.syntax[it.lessonId] },
          feedback = taskFeedback,
          onDismissFeedback = { taskFeedback = null },
@@ -231,7 +266,13 @@ ORDER BY ticker;""".trimIndent()
                  val assessment = db.assess(sql, chosen.expectedSql)
                  result = assessment.actual
                  taskFeedback = assessment.feedback
-                 if (assessment.correct) completedTasks = completedTasks + chosen.id
+                 if (assessment.correct) {
+                   val newCompleted = completedTasks + chosen.id
+                   completedTasks = newCompleted
+                   if (chosen.lessonId in MobileCurriculum.masteredLessons(practiceTasks, newCompleted)) {
+                     taskFeedback = "Верно! Все задачи урока решены — он освоен автоматически."
+                   }
+                 }
                  history = (listOf(sql) + history.filterNot { it == sql }).take(50)
                } catch (e: Exception) {
                  error = e.message ?: "Ошибка SQL"
@@ -241,7 +282,24 @@ ORDER BY ticker;""".trimIndent()
          },
          onNextTask = {
            activeTask?.let { current ->
-             PracticePath.next(practiceTasks, current.id)?.let { openPracticeTask(it) }
+             val next = MobileCurriculum.nextUnsolvedTaskOfLesson(
+               current.lessonId, practiceTasks, completedTasks
+             )
+             if (next != null) openPracticeTask(next)
+             else {
+               val lesson = MobileCurriculum.nextUnfinishedLesson(
+                 current.lessonId, practiceTasks, completedTasks
+               )
+               if (lesson != null) {
+                 selectedLesson = lesson
+                 exampleLessonId = null
+                 activeTask = null
+                 taskFeedback = null
+                 result = null
+                 error = null
+                 tab = 2
+               } else { tab = 0; activeTask = null }
+             }
            }
          },
          previousTask = activeTask?.let { PracticePath.previous(practiceTasks, it.id) },
@@ -257,7 +315,7 @@ ORDER BY ticker;""".trimIndent()
          },
          onTaskLesson = {
            activeTask?.let { task ->
-             selectedLesson = lessons.firstOrNull { it.id == task.lessonId }
+             selectedLesson = MobileCurriculum.courseLessons().firstOrNull { it.id == task.lessonId }
              tab = 2
            }
          }
@@ -268,9 +326,9 @@ ORDER BY ticker;""".trimIndent()
        taskDone=completedTasks,
        tasks=practiceTasks,
        historyCount=history.size,
-       onOpenLesson={lesson->selectedLesson=lesson;tab=2},
+       onOpenLesson={lesson->selectedLesson=lesson;exampleLessonId=null;tab=2},
        onOpenPractice={lessonId->practiceFocusLessonId=lessonId;tab=1;selectedLesson=null},
-       onReset={completed=emptySet();completedTasks=emptySet();history=emptyList()}
+       onReset={completedTasks=emptySet();history=emptyList()}
      )
    }
   }}
@@ -312,20 +370,42 @@ fun CourseScreen(
     tasks: List<PracticeTask>,
     taskDone: Set<Int>,
     onOpen: (Lesson) -> Unit,
-    onPractice: (Int) -> Unit
+    onPractice: (Int) -> Unit,
+    onContinue: (Lesson) -> Unit
 ) {
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Программа обучения", style = MaterialTheme.typography.headlineSmall)
-        Text("Сначала урок, затем задания по его теме.", color = Muted, fontSize = 12.sp)
+    val mobileLessons = MobileCurriculum.courseLessons()
+    val next = MobileCurriculum.firstUnfinishedLesson(tasks, taskDone)
+    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        Text("Курс SQL", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Теория: ${done.size}/${lessons.size} · Практика: ${taskDone.size}/${tasks.size}",
+            "Материал → свой запрос → задачи → следующий урок. " +
+                "Урок засчитывается автоматически, когда решены все его задачи.",
+            fontSize = 12.sp, color = Muted
+        )
+        Text(
+            "Освоено ${done.size} из ${mobileLessons.size} уроков · " +
+                "${taskDone.count { id -> tasks.any { it.id == id } }} из ${tasks.size} задач",
             color = Muted, fontSize = 12.sp
         )
-        Spacer(Modifier.height(8.dp))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-            items(lessons, key = { it.id }) { lesson ->
+        LinearProgressIndicator(
+            progress = {
+                if (mobileLessons.isEmpty()) 0f else done.size.toFloat() / mobileLessons.size
+            },
+            modifier = Modifier.fillMaxWidth(), color = Green
+        )
+        Button(
+            onClick = { next?.let(onContinue) },
+            enabled = next != null,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (next == null) "Мобильный курс завершён" else "Продолжить — урок ${next.id + 1}")
+        }
+        Text("Уроки", style = MaterialTheme.typography.titleMedium)
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(mobileLessons, key = { it.id }) { lesson ->
                 val forLesson = PracticePath.forLesson(tasks, lesson.id)
                 val solved = forLesson.count { it.id in taskDone }
+                val mastered = lesson.id in done
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Panel),
                     shape = RoundedCornerShape(13.dp)
@@ -333,27 +413,28 @@ fun CourseScreen(
                     Column(Modifier.fillMaxWidth().padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Урок ${lesson.id + 1}. ${lesson.title}", style = MaterialTheme.typography.titleSmall)
                                 Text(
-                                    "Теория: " + if (lesson.id in done) "изучена" else "не отмечена",
-                                    fontSize = 11.sp, color = if (lesson.id in done) Green else Muted
+                                    "Урок ${lesson.id + 1}. ${lesson.title}",
+                                    style = MaterialTheme.typography.titleSmall
                                 )
                                 Text(
-                                    if (forLesson.isEmpty()) "Практика: нет проверяемых задач"
-                                    else "Практика: $solved из ${forLesson.size} задач",
-                                    color = Muted, fontSize = 11.sp
+                                    if (mastered) "Освоен автоматически"
+                                    else "$solved из ${forLesson.size} задач решено",
+                                    color = if (mastered) Green else Muted, fontSize = 12.sp
                                 )
                             }
-                            if (lesson.id in done) Icon(Icons.Default.CheckCircle, null, tint = Green)
-                            else Icon(Icons.Default.ChevronRight, null, tint = Muted)
+                            Icon(
+                                if (mastered) Icons.Default.CheckCircle else Icons.Default.ChevronRight,
+                                null,
+                                tint = if (mastered) Green else Muted
+                            )
                         }
                         Row {
-                            TextButton(onClick = { onOpen(lesson) }) { Text("Теория", fontSize = 12.sp) }
-                            if (forLesson.isNotEmpty()) {
-                                TextButton(onClick = { onPractice(lesson.id) }) {
-                                    Text("Задания (${forLesson.size})", fontSize = 12.sp)
-                                }
-                            }
+                            TextButton(onClick = { onOpen(lesson) }) { Text("Материал", fontSize = 12.sp) }
+                            TextButton(
+                                onClick = { onPractice(lesson.id) },
+                                enabled = forLesson.isNotEmpty()
+                            ) { Text("Задачи (${forLesson.size})", fontSize = 12.sp) }
                         }
                     }
                 }
@@ -365,142 +446,92 @@ fun CourseScreen(
 @Composable
 fun LessonScreen(
     lesson: Lesson,
-    guide: LessonGuide?,
     detail: DetailedLesson?,
     dialect: LessonSyntax?,
-    globalNotice: String,
     practiceCount: Int,
+    completedCount: Int,
     onBack: () -> Unit,
     onTry: (String) -> Unit,
     onPractice: () -> Unit,
-    onDone: () -> Unit
+    onContinue: () -> Unit
 ) {
-    var showAnswer by remember(lesson.id) { mutableStateOf(false) }
-    var showFullMaterial by remember(lesson.id) { mutableStateOf(true) }
     val androidExample = dialect?.androidSql?.takeIf { it.isNotBlank() } ?: lesson.example
-    val modifiesData = Regex("""(?i)^\s*(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|BEGIN)\b""")
-        .containsMatchIn(androidExample)
-
+    val mastered = practiceCount > 0 && completedCount == practiceCount
+    val chapterScroll = key(lesson.id) { rememberScrollState() }
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(13.dp)
+        Modifier.fillMaxSize().verticalScroll(chapterScroll).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         TextButton(onClick = onBack) { Text("← К программе") }
         Text("Урок ${lesson.id + 1} · ${lesson.title}", style = MaterialTheme.typography.headlineSmall)
-        Text(lesson.level.uppercase(), color = Green, fontSize = 12.sp)
-        Text(lesson.description, style = MaterialTheme.typography.bodyLarge)
-
-        Surface(color = Color(0xFF293242), shape = RoundedCornerShape(12.dp)) {
-            Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                Text("Среда выполнения и диалект SQL", style = MaterialTheme.typography.titleMedium)
-                Text("Десктоп: SQL Server + SSMS  |  Телефон: SQLite + частичный адаптер T-SQL", color = Color(0xFFFFD28A), fontSize = 12.sp)
-                Text(globalNotice, fontSize = 12.sp)
-                if (dialect != null) {
-                    Text(dialect.kindLabel, color = Green, style = MaterialTheme.typography.titleSmall)
-                    Text(dialect.summary, style = MaterialTheme.typography.bodyMedium)
-                    Text("Важно: ${dialect.warning}", fontSize = 12.sp, color = Color(0xFFFFD28A))
-                }
-            }
-        }
-        if (dialect != null && dialect.serverSql.isNotBlank()) {
-            Text("Как пишется в SQL Server / SSMS", style = MaterialTheme.typography.titleMedium)
-            Surface(color = Panel, shape = RoundedCornerShape(12.dp)) {
-                Column(Modifier.padding(12.dp)) {
-                    Text("T-SQL · пример для десктопа; не для непосредственного выполнения в SQLite", color = Color(0xFFFFD28A), fontSize = 11.sp)
-                    Spacer(Modifier.height(7.dp))
-                    Text(
-                        dialect.serverSql,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        modifier = Modifier.horizontalScroll(rememberScrollState())
-                    )
-                }
-            }
-        }
-
-        if (guide != null) {
-            Text("Что означает эта тема", style = MaterialTheme.typography.titleMedium)
-            Text(guide.what)
-            Text("Практический смысл", style = MaterialTheme.typography.titleMedium)
-            Text(guide.why)
-            Text("Разбор по шагам", style = MaterialTheme.typography.titleMedium)
-            guide.steps.forEachIndexed { index, step ->
-                Text("${index + 1}. $step", style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-
-        if (detail != null) {
-            Text("Развёрнутый урок", style = MaterialTheme.typography.titleLarge)
-            Text(
-                "${detail.sections.size} разделов на основе десктопного курса. " +
-                    "Нумерация уроков в источнике относится к десктопной программе. " +
-                    "Исходные примеры в разделах помечены как T-SQL / SQL Server. " +
-                    "Материалы доступны без интернета.",
-                color = Muted, fontSize = 12.sp
-            )
-            OutlinedButton(
-                onClick = { showFullMaterial = !showFullMaterial },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (showFullMaterial) "Свернуть подробный материал" else "Читать подробный материал")
-            }
-            if (showFullMaterial) LessonReadingSections(detail)
-        }
-
-        Text("Пример для Android-тренажёра", style = MaterialTheme.typography.titleMedium)
         Text(
-            "Этот SQL будет перенесён в редактор без выполнения. " +
-                if (modifiesData) "Обрати внимание: после ручного запуска он может изменить локальную БД."
-                else "Кнопка «Выполнить» запустит его на SQLite.",
-            fontSize = 12.sp,
-            color = if (modifiesData) Color(0xFFFFD28A) else Muted
+            if (mastered) "Урок освоен: все $practiceCount задач решены"
+            else "Прогресс: $completedCount из $practiceCount задач",
+            fontSize = 12.sp, color = if (mastered) Green else Muted
         )
+        Text("1. Изучи материал", style = MaterialTheme.typography.titleLarge)
+        if (detail != null) {
+            LessonReadingSections(detail)
+        } else {
+            Text("Материал этой главы отсутствует.", color = Muted)
+        }
+        HorizontalDivider()
+        Text("2. Попробуй запрос самостоятельно", style = MaterialTheme.typography.titleLarge)
+        Text(
+            "На телефоне работает SQLite. Текст T-SQL для SQL Server в материале " +
+                "отмечен отдельно. Ниже — исполняемый вариант для Android.",
+            color = Muted, fontSize = 12.sp
+        )
+        if (dialect != null) {
+            Surface(color = Color(0xFF293242), shape = RoundedCornerShape(11.dp)) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(dialect.kindLabel, color = Color(0xFFFFD28A), fontSize = 12.sp)
+                    Text(dialect.summary, fontSize = 12.sp)
+                    Text(dialect.warning, fontSize = 12.sp, color = Color(0xFFFFD28A))
+                    if (dialect.serverSql.isNotBlank()) {
+                        Text("SQL Server / SSMS", color = Muted, fontSize = 11.sp)
+                        Text(
+                            dialect.serverSql,
+                            fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                            modifier = Modifier.horizontalScroll(rememberScrollState())
+                        )
+                    }
+                }
+            }
+        }
+        Text("Пример SQLite", style = MaterialTheme.typography.titleSmall)
         Surface(color = Panel, shape = RoundedCornerShape(12.dp)) {
             Text(
                 androidExample,
-                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(14.dp),
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(12.dp),
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp
             )
         }
-        Button(onClick = { onTry(androidExample) }, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.PlayArrow, null)
-            Spacer(Modifier.width(8.dp))
-            Text("Открыть пример SQLite в редакторе")
+        Button(onClick = { onTry("-- Напиши запрос по теме урока\nSELECT \nFROM ") },
+            modifier = Modifier.fillMaxWidth()) {
+            Text("Написать запрос самому")
         }
-        if (dialect?.kind == "adapter" && lesson.example.trim() != androidExample.trim()) {
-            OutlinedButton(onClick = { onTry(lesson.example) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Попробовать T-SQL через адаптер")
-            }
-            Text(
-                "Второй вариант работает только с ограниченным набором преобразований. " +
-                    "Он не запускает Microsoft SQL Server.",
-                color = Muted,
-                fontSize = 11.sp
-            )
+        OutlinedButton(onClick = { onTry(androidExample) }, modifier = Modifier.fillMaxWidth()) {
+            Text("Открыть пример в SQL-редакторе")
         }
-        if (guide != null) {
-            Surface(color = Color(0xFF293242), shape = RoundedCornerShape(12.dp)) {
-                Column(Modifier.padding(12.dp)) {
-                    Text("Частая ошибка", color = Color(0xFFFFD28A), fontSize = 12.sp)
-                    Spacer(Modifier.height(4.dp))
-                    Text(guide.pitfall)
-                }
-            }
-            Text("Проверка понимания", style = MaterialTheme.typography.titleMedium)
-            Text(guide.question)
-            OutlinedButton(onClick = { showAnswer = !showAnswer }) {
-                Text(if (showAnswer) "Скрыть объяснение" else "Показать объяснение")
-            }
-            if (showAnswer) Text(guide.answer, color = Green)
-        }
+        HorizontalDivider()
+        Text("3. Реши задачи по теме", style = MaterialTheme.typography.titleLarge)
+        Text(
+            "Задачи проверяются автоматически. После выполнения всех задач урок " +
+                "получит статус «Освоен» — отмечать его вручную не нужно.",
+            color = Muted, fontSize = 12.sp
+        )
         if (practiceCount > 0) {
-            OutlinedButton(onClick = onPractice, modifier = Modifier.fillMaxWidth()) {
-                Text("Задачи по уроку ($practiceCount)")
+            Button(onClick = onPractice, modifier = Modifier.fillMaxWidth()) {
+                Text(if (mastered) "Повторить задачи ($practiceCount)" else
+                    "К задачам — осталось ${practiceCount - completedCount} из $practiceCount")
             }
         }
-        OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-            Text("Отметить теорию изученной")
+        if (mastered) {
+            Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
+                Text("Следующий урок →")
+            }
         }
         Spacer(Modifier.height(12.dp))
     }
@@ -523,32 +554,33 @@ fun ProgressScreen(
     ) {
         Text("Мой прогресс", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Теория отмечается отдельно от проверки задач. Каждая задача привязана к уроку.",
+            "Урок осваивается автоматически после решения всех задач по теме. Отдельных отметок нет.",
             color = Muted, fontSize = 12.sp
         )
         Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Panel)) {
                 Column(Modifier.padding(13.dp)) {
-                    Text("${done.size}/${lessons.size}", style = MaterialTheme.typography.headlineMedium, color = Green)
-                    Text("уроков отмечено", fontSize = 11.sp)
+                    Text("${done.size}/${MobileCurriculum.courseLessons().size}", style = MaterialTheme.typography.headlineMedium, color = Green)
+                    Text("уроков освоено", fontSize = 11.sp)
                 }
             }
             Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Panel)) {
                 Column(Modifier.padding(13.dp)) {
-                    Text("${taskDone.size}/${tasks.size}", style = MaterialTheme.typography.headlineMedium, color = Green)
+                    Text("${taskDone.count { id -> tasks.any { it.id == id } }}/${tasks.size}",
+                        style = MaterialTheme.typography.headlineMedium, color = Green)
                     Text("задач решено", fontSize = 11.sp)
                 }
             }
         }
         Text("По урокам", style = MaterialTheme.typography.titleMedium)
-        lessons.forEach { lesson ->
+        MobileCurriculum.courseLessons().forEach { lesson ->
             val forLesson = PracticePath.forLesson(tasks, lesson.id)
             val count = forLesson.count { it.id in taskDone }
             Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
                 Column(Modifier.fillMaxWidth().padding(11.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text("Урок ${lesson.id + 1} · ${lesson.title}", style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "Теория: " + if (lesson.id in done) "изучена" else "не отмечена",
+                        if (lesson.id in done) "Урок освоен" else "Урок в процессе",
                         color = if (lesson.id in done) Green else Muted, fontSize = 11.sp
                     )
                     Text(
@@ -583,7 +615,7 @@ fun ProgressScreen(
             title = { Text("Сбросить статистику?") },
             text = {
                 Text(
-                    "Будут очищены отметки о пройденных уроках, решённых задачах и история. " +
+                    "Будут очищены отметки о решённых задачах и история. " +
                         "Учебная база и сохранённые SQL-запросы останутся."
                 )
             },
